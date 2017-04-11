@@ -21,9 +21,6 @@ Route::post('/register','UserController@store');
 
 Route::get('/registration/{token}','UserController@register');
 
-
-Route::get('/test/{id}', 'UserController@show');
-
 Route::get('/show/{userId}','UserController@show');
 
 Route::post('/forgotPassword','UserController@forgotPassword');

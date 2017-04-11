@@ -17,8 +17,9 @@ class CreatePostsTable extends Migration
             $table->increments('postId');
             $table->integer('userId')->unsigned();
             $table->string('location');
+            $table->float('latitude');
+            $table->float('longitude');
             $table->integer('numberOfRooms');
-            $table->boolean('type');
             $table->string('description');
             $table->integer('price');
             $table->boolean('postType');

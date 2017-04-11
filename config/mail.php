@@ -56,8 +56,8 @@ return [
     */
 
     'from' => [
-        'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
-        'name' => env('MAIL_FROM_NAME', 'Example'),
+        'address' => env('MAIL_FROM_ADDRESS', 'room-rent@room-rent.com'),
+        'name' => env('MAIL_FROM_NAME', 'Room-rent'),
     ],
 
     /*
@@ -88,16 +88,16 @@ return [
 
     'password' => env('MAIL_PASSWORD'),
 
-    /*
-    |--------------------------------------------------------------------------
-    | Sendmail System Path
-    |--------------------------------------------------------------------------
-    |
-    | When using the "sendmail" driver to send e-mails, we will need to know
-    | the path to where Sendmail lives on this server. A default path has
-    | been provided here, which will work well on most of your systems.
-    |
-    */
+    
+    // |--------------------------------------------------------------------------
+    // | Sendmail System Path
+    // |--------------------------------------------------------------------------
+    // |
+    // | When using the "sendmail" driver to send e-mails, we will need to know
+    // | the path to where Sendmail lives on this server. A default path has
+    // | been provided here, which will work well on most of your systems.
+    // |
+    
 
     'sendmail' => '/usr/sbin/sendmail -bs',
 
@@ -112,12 +112,12 @@ return [
     |
     */
 
-    'markdown' => [
-        'theme' => 'default',
+    // 'markdown' => [
+    //     'theme' => 'default',
 
-        'paths' => [
-            resource_path('views/vendor/mail'),
-        ],
-    ],
+    //     'paths' => [
+    //         resource_path('views/vendor/mail'),
+    //     ],
+    // ],
 
 ];

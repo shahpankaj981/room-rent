@@ -15,16 +15,17 @@ class CreatePostsTable extends Migration
     {
         Schema::create('posts', function (Blueprint $table) {
             $table->increments('postId');
-            $table->string('userId');
+            $table->integer('userId')->unsigned();
             $table->string('location');
+            $table->float('latitude');
+            $table->float('longitude');
             $table->integer('numberOfRooms');
-            $table->boolean('type');
             $table->string('description');
-            $table->dateTime('createdAt');
             $table->integer('price');
-            $table->boolean('ask-offer');
+            $table->boolean('postType');
             $table->timestamps();
-        });
+            $table->foreign('userId')->references('userId')->on('users');
+    });
     }
 
     /**

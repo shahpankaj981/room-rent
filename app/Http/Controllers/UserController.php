@@ -2,422 +2,306 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\UsersRequest;
 use Illuminate\Http\Request;
 use App\User;
-use Validator;
+use App\ApiToken;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Input;
 use App\Mail\ActivationEmail;
 use App\Mail\ForgotPasswordEmail;
 use Illuminate\Support\Facades\Hash;
-use Response;
+use Illuminate\Support\Facades\Response;
 
 class UserController extends Controller
 {
+    protected $response;
+
+    protected $user;
+
     public function __construct(User $user)
-	{
+    {
         $this->user = $user;
-	}
+    }
 
-	public function login(Request $request)
-	{
-		$this->response = [];
-		$apiToken = "OD44GCYFpHYHcwYFTG1QsQBGPOLcHjk8OMOMPkd3Ew3RTaLX0ox2ES3UASxE";
-		if($request->apiToken!=$apiToken){
-			$this->response['code']= "0052";
-			$this->response['message']= "Invalid Token";
-			return Response::json($this->response);
-		}
-		$identity = $request->identity;
-		$password = $request->password;
+    public function login(Request $request)
+    {
+        $this->response = [];
+        $apiToken       = "OD44GCYFpHYHcwYFTG1QsQBGPOLcHjk8OMOMPkd3Ew3RTaLX0ox2ES3UASxE";
+        if($request->apiToken != $apiToken){
+            $this->response['code']    = "0052";
+            $this->response['message'] = "Invalid Token";
+            return Response::json($this->response);
+        }
+        $identity     = $request->identity;
+        $password     = $request->password;
+        $deviceType   = $request->deviceType;
+        $deviceToken  = $request->deviceToken;
+        $identityType = static::findIdentityType($identity);
+        $user         = User::where($identityType, $identity)->first();
 
-		
-		$identityType = static::findIdentityType($identity);
-		$user = User::where($identityType , $identity)->first();
+        if(!$user){
+            $this->response['code']    = "0003";
+            $this->response['message'] = "Email/UserName does not exist";
+            return Response::json($this->response);
+        }
+        elseif(!(Auth::attempt([$identityType => $identity, 'password' => $password]))){
+            $this->response['code']    = "0004";
+            $this->response['message'] = "Invalid password";
+            return Response::json($this->response);
+        }
+        else{
+            if(!$user->activation){
+                $this->response['code']    = "0031";
+                $this->response['message'] = "Verify your account in email";
+                return Response::json($this->response);
+            }
+            else{
+                $apiToken      = str_random(30);
+                $existingLogin = ApiToken::where([
+                    ['userId', '=', $user->userId],
+                    ['deviceType', '=', $deviceType],
+                    ['deviceToken', '=', $deviceToken],
+                ])->first();
+                if($existingLogin){
+                    ApiToken::where([
+                        ['userId', '=', $user->userId],
+                        ['deviceToken', '=', $deviceToken],
+                        ['deviceType', '=', $deviceType],
+                    ])->update(['apiToken' => $apiToken]);
+                }
+                else{
+                    ApiToken::insert(['userId'      => $user->userId,
+                                      'deviceType'  => $deviceType,
+                                      'apiToken'    => $apiToken,
+                                      'deviceToken' => $deviceToken,
+                    ]);
+                }
+                $this->response['code']     = '0001';
+                $this->response['message']  = 'Successful login';
+                $this->response['apiToken'] = $apiToken;
+                $this->response['user']     = $user;
+                return Response::json($this->response);
+            }
+        }
+    }
 
-		
-		if(!$user){
-			$this->response['code']= "0003";
-			$this->response['message']= "Email/UserName doesnot exist";
-			return Response::json($this->response);
-		}
-		elseif(!(Auth::attempt(array($identityType=>$identity,'password'=>$password)))){
-			$this->response['code']= "0004";
-			$this->response['message']= "Invalid password";
-			return Response::json($this->response);
-		}
-		else{
-			if(!$user->activation){
-				$this->response['code']= "0031";
-				$this->response['message']= "Verify your account in email";
-				return Response::json($this->response);
-			}
-			else{
-				$apiToken = str_random(30);
-				DB::table('userApiTokens')->insert(['userId'=>$user->userId,
-													'deviceType'=>$request->deviceType,
-													'userApiToken'=>$apiToken
-													]);
-				$this->response['code'] = '0001';
-				$this->response['message'] = 'Successfull login';
-				$this->response['apiToken'] = $apiToken;
-				$this->response['user'] = $user;
-				return Response::json($this->response);	
-			}
-		}
+    public function store(UsersRequest $request)
+    {
+        $this->response = [];
+        $apiToken       = "OD44GCYFpHYHcwYFTG1QsQBGPOLcHjk8OMOMPkd3Ew3RTaLX0ox2ES3UASxE";
 
-		//  && $user->activation){
-		// 	return response(json_encode(array('code'=>'0001','message'=>'Successfull login')));	
-		// } 
-		// elseif(Auth::attempt(array('email'=>$email,'password'=>$password)) && !$user->activation){
-		// 	return response(json_encode(array('code'=>'0002','message'=>'Activate your account in email')));
-		// }
-		// else{
-			
-		// }
-		//return response("hello");
-	}
+        if($request->apiToken != $apiToken){
+            $this->response['code']    = "0052";
+            $this->response['message'] = "Invalid Token";
+            return Response::json($this->response);
+        }
+        $user              = new User;
+        $confirmationCode  = str_random(30);
+        $user->email       = $request->email;
+        $existingUserCount = DB::table('users')
+            ->where('email', $user->email)
+            ->count();
+        if($existingUserCount > 0){
+            $this->response['code']    = "0017";
+            $this->response['message'] = "This email is already registered";
+            return Response::json($this->response);
+        }
 
-	public function store(Request $request)
-	{
-		$this->response = [];
-		$apiToken = "OD44GCYFpHYHcwYFTG1QsQBGPOLcHjk8OMOMPkd3Ew3RTaLX0ox2ES3UASxE";
-		// return response($request);
-		if($request->apiToken!=$apiToken){
-				$this->response['code']= "0052";
-				$this->response['message']= "Invalid Token";
-				return Response::json($this->response);
-		}
-		
-		$user = new User;
-		$confirmationCode = str_random(30);
-		$validator = Validator::make($request->all(),[
-			'email'=>'required | email',
-			'userName'=>'required | max:25',
-			'name' => 'required | max:25',
-			'password' => 'required | min:8'
-			]);
+        $user->userName    = $request->userName;
+        $existingUserCount = DB::table('users')
+            ->where('userName', $user->userName)
+            ->count();
 
-		if($validator->fails())
-		{
+        if($existingUserCount > 0){
+            $this->response['code']    = "0018";
+            $this->response['message'] = "This user name is already taken";
+            return Response::json($this->response);
+        }
 
-			$this->response['code'] = '0014'; 
-			$this->response['message'] ='Validation Errors';
-			$errors = [];
-			$validationErrors = json_decode($validator->errors());
-			foreach ($validationErrors as $key=>$value) {
-				$errors[$key] = $value[0];
-			}
-			$this->response['errors'] = $errors;
-			return Response::json($this->response);	
-		}
-		else
-		{
-			$user->email = $request->email;
-			$existingUserCount = DB::table('users')
-										->where('email',$user->email)
-										->count();
-		
+        $user->name                = $request->name;
+        $user->password            = bcrypt($request->password);
+        $user->phone               = $request->phone;
+        $user->profileImage        = $request->profileImage;
+        $user->activation          = 0;
+        $user->confirmationCode    = $confirmationCode;
+        $user->forgotPasswordToken = "";
 
-			if($existingUserCount>0){
-				$this->response['code']= "0017";
-				$this->response['message']= "This email is already registered";
-				return Response::json($this->response);
-			}
-			
-			$user->userName = $request->userName;
-			$existingUserCount = DB::table('users')
-										->where('userName',$user->userName)
-										->count();
+        //For profile Image
 
-			if($existingUserCount>0){
-				$this->response['code']= "0018";
-				$this->response['message']= "This user name is already taken";
-				return Response::json($this->response);
-			}
+        $success = $user->save();
+        if($success){
+            \Mail::to($user)->send(new ActivationEmail($user));
 
-			$user->name = $request->name;
-			$user->password = bcrypt($request->password);
-			$user->phone = $request->phone;
-			$user->profileImage = $request->profileImage;
-			$user->activation = 0;
-			$user->confirmationCode = $confirmationCode;
-			$user->forgotPasswordToken = "";
+            $this->response['code']    = "0013";
+            $this->response['message'] = "User registered";
+            $this->response['user']    = $user;
+            return Response::json($this->response);
+        }
+        else{
+            $this->response['code']    = "0035";
+            $this->response['message'] = "Database error";
+            return Response::json($this->response);
+        }
+    }
 
+    public function register($token)
+    {
+        $this->response = [];
+        $user           = User::where('confirmationCode', $token)->first();
 
-		// 	if($request->profileImage)
-		// 	{
+        if(!$user){
+            $this->response['code']    = "0033";
+            $this->response['message'] = "User Already active";
+            return Response::json($this->response);
+        }
 
-		// 	}
-		// }
-		// else
-		// {
-		// 	return response()->json[
-		// 	'message'=>validator->errors(),
-		// 	'data'=>request->all()
-		// 	];
-		}
-		
-		// \Mail::send('emails.activation', $user, function($message) use ($user) {
+        if($user->confirmationCode == $token){
+            $user->activation       = 1;
+            $user->confirmationCode = null;
 
-  //               $message->to($user['email']);
+            User::where('email', $user->email)
+                ->update(['activation'       => 1,
+                          'confirmationCode' => "NULL"]);
 
-  //               $message->subject('Site - Activation Code');
+            $this->response['code']    = "0013";
+            $this->response['message'] = "User succesfully registered";
 
-  //           });
+            return Response::json($this->response);
+        }
+        else{
+            $this->response['code']    = "0053";
+            $this->response['message'] = "Invalid request";
+            return Response::json($this->response);
+        }
+    }
 
-		
-		$success = $user->save();
-		if ($success){
-			/*$mailSuccess = */
-			$this->response['code']= "0013";
-			$this->response['message']= "User registered";
-			
-			\Mail::to($user)->send(new ActivationEmail($user ));
-			// if ($mailSuccess){
-				$this->response['user'] = $user;
-				return Response::json($this->response);
-			// }
-			// else{
-			// 	return response(json_encode(array('code'=>'0016',
-			// 								'message'=>'Could not send mail')));
-			// }
-		}
-		else{
-			$this->response['code']= "0035";
-			$this->response['message']= "Database error";
-			return Response::json($this->response);
-		}
-	}
+    public function logout(Request $request)
+    {
+        $logoutSuccess = ApiToken::where('userApiToken', $request->userApiToken)
+            ->delete();
+        if($logoutSuccess){
+            $this->response['code']    = "0020";
+            $this->response['message'] = "Logged out successfully";
+            return Response::json($this->response);
+        }
+        else{
+            $this->response['code']    = "0021";
+            $this->response['message'] = "Problem occurred during logout";
+            return Response::json($this->response);
+        }
+    }
 
-	public function register($token)
-	{
-		$this->response = [];
-		$user = new User;
-		$user = User::where('confirmationCode',$token)->first();
-		// return response($user->confirmationCode.'-'.$token);
+    public function show($userId)
+    {
+        $user = DB::table('users')->where('userId', $userId)->first();
+        echo json_encode($user);
+    }
 
-		if(!$user)
-		{
-			$this->response['code']= "0033";
-			$this->response['message']= "User Already active";
-			return Response::json($this->response); 
-		}
-		
-		if($user->confirmationCode == $token)
-		{
-			$user->activation = 1;
-			$user->confirmationCode = null;
-			DB::table('users')
-					->where('email',$user->email)
-					->update(['activation'=>1,
-							  'confirmationCode'=>"NULL"]);
+    public function update(UsersRequest $request)
+    {
+        $userData       = ApiToken::where('apiToken', $request->apiToken)->first();
+        $this->response = [];
 
-			// return response(json_encode($user));
-			$this->response['code']= "0013";
-			$this->response['message']= "User succesfully registered";
-			return Response::json($this->response);
-		}
-		
-		else
-		{
-			$this->response['code']= "0053";
-			$this->response['message']= "Invalid request";
-			return Response::json($this->response);
-		}
-	}
+        User::where('userId', '=', $userData->userId)
+            ->update(['email'    => $request->email,
+                      'name'     => $request->name,
+                      'userName' => $request->userName,
+                      'phone'    => $request->phone,
+            ]);
 
-	public function logout(Request $request)
-	{
-		//delete from database the userapitoken upon logout
-		$logoutSuccess = DB::table('userApiTokens')
-							->where('userApiToken',$request->userApiToken)
-							->delete();
-		if($logoutSuccess){
-			$this->response['code']= "0020";
-			$this->response['message']= "Logged out successfully";
-			return Response::json($this->response);
-		}
-		else{
-			$this->response['code']= "0021";
-			$this->response['message']= "problem Occured during logout";
-			return Response::json($this->response);
-		}
-	}
+        $user                      = User::where('userId', $userData->userId);
+        $this->response['code']    = "0026";
+        $this->response['message'] = "profile updated successfully";
+        $this->response['user']    = $user;
+        return Response::json($this->response);
+    }
 
-	public function show($userId)
-	{
-		//
-		$user = DB::table('users')->where('userId',$userId)->first();
-		echo json_encode($user);
-		// echo "hello";
+    public function changePassword(Request $request)
+    {
+        $this->response = [];
+        $userData       = ApiToken::where('userApiToken', $request->apiToken)->first();
+        $user           = User::where('userId', $userData->userId)->first();
 
-	}
+        if(!Hash::check($request->oldPassword, $user->password)){
+            $this->response['code']    = "0021";
+            $this->response['message'] = "Old password doesn\'t match";
+            return Response::json($this->response);
+        }
+        if(is_null($request->newPassword)){
+            $this->response['code']    = "0027";
+            $this->response['message'] = "The password cannot be empty";
+            return Response::json($this->response);
+        }
+        else{
+            User::where('userId', $userData->userId)
+                ->update(['password' => bcrypt($request->newPassword)]);
+            $this->response['code']    = "0024";
+            $this->response['message'] = "The password has been changed";
+            $this->response['users']   = $user;
+            return Response::json($this->response);
+        }
+    }
 
-	public function update(Request $request)
-	{
-		$this->response = [];
-		// return response(json_encode($request->userApiToken));
-		$userData = DB::table('userApiTokens')
-							->where('userApiToken',$request->userApiToken)
-							->first();
-		// return response(json_encode($userData));
-		$validator = Validator::make($request->all(),[
-								'name'=>'required',
-								'userName'=>'required',
-								'email'=>'required']);
+    public function forgotPassword(Request $request)
+    {
+        $this->response = [];
+        $identity       = $request->identity;
+        $identityType   = $this->findIdentityType($identity);
+        $user           = User::Where($identityType, $identity)->first();
 
-		if(!$validator->fails()){
-			$userOldData = User::where('userId',$userData->userId)->first();
+        if(!$user){
+            $this->response['code']    = "0022";
+            $this->response['message'] = "Email/UserName doesnot exist";
+            return Response::json($this->response);
+        }
+        $forgotPasswordToken = str_random(30);
 
-			if ($userOldData->phone == $request->phone && $userOldData->name==$request->name &&
-				$userOldData->email == $request->email && $userOldData->userName == $request->userName){
-						$this->response['code']= "0025";
-						$this->response['message']= "You enetered the same old info";
-						return Response::json($this->response);
-				}
+        User::Where($identityType, $identity)
+            ->update(['forgotPasswordToken' => $forgotPasswordToken]);
 
-			$success = User::where('userId',$userData->userId)
-						  	->update(['userName'=>$request->userName,
-						  			  'email'=>$request->email,
-						  			  'name'=>$request->name,
-						  			  'phone'=>$request->phone]);
+        $user = User::where($identityType, $identity)->first();
 
-			$user = User::where('userId',$userData->userId)->first();
-			if($success){
-				$this->response['code']= "0026";
-				$this->response['message']= "Profile updated successfully";
-				return Response::json($this->response);
-			}
-			else{
-				$this->response['code']= "0035";
-				$this->response['message']= "Database error";
-				return Response::json($this->response);
-			}
-		}
+        \Mail::to($user)->send(new ForgotPasswordEmail($user));
 
-		else
-		{
-			$this->response['code']= "0014";
-			$this->response['message']= "Validation Errors";
-			$errors = [];
-			$validationErrors = json_decode($validator->errors());
-			foreach ($validationErrors as $key=>$value) {
-				$errors[$key] = $value[0];
-			}
-			$this->response['errors'] = $errors;
-			return Response::json($this->response);
-		}
-	}
+        $this->response['code']    = "0023";
+        $this->response['message'] = "Password reset link has been sent to your email";
+        return Response::json($this->response);
+    }
 
-	public function changePassword(Request $request)
-	{
-		// return response(json_encode($request->apiToken));
-		$this->response = [];
-		$userData = DB::table('userApiTokens')
-							->where('userApiToken',$request->apiToken)->first();
-		
-		
-		$user = User::where('userId',$userData->userId)->first();
-		
-		if (!Hash::check($request->oldPassword,$user->password)){
-			$this->response['code']= "0021";
-			$this->response['message']= "Old password doesn\'t match";
-			return Response::json($this->response);
-		}
+    public function showForgotPasswordForm($email, $forgotPasswordToken)
+    {
+        $this->response = [];
+        $user           = User::Where('email', $email)->first();
+        if($user->forgotPasswordToken != $forgotPasswordToken){
+            $this->response['code']    = "0053";
+            $this->response['message'] = "Invalid request";
+            return Response::json($this->response);
+        }
+        else{
+            return view('forgotPasswordForm')->with('user', $user);
+        }
+    }
 
-		if(is_null($request->newPassword)){
-			$this->response['code']= "0027";
-			$this->response['message']= "The password cannot be empty";
-			return Response::json($this->response);
-		}
-		else{
-			
-			DB::table('users')->where('userId',$userData->userId)
-						  	  ->update(['password'=>bcrypt($request->newPassword)]);
-			$this->response['code']= "0024";
-			$this->response['message']= "The password has been changed";
-			$this->response['users'] = $user;
-			return Response::json($this->response);
-		}
-	}
+    public function forgotPasswordStore(Request $request)
+    {
+        User::where('email', $request->email)
+            ->update(['password' => bcrypt($request->password)]);
 
-	public function forgotPassword(Request $request)
-	{
-		$this->response = [];
-		$identity = $request->identity;
-		$identityType = $this->findIdentityType($identity);
-		
+        $this->response = [];
+        $this->response['code']    = "0024";
+        $this->response['message'] = "password updated successfully";
+        return Response::json($this->response);
+    }
 
-		$user = User::Where($identityType,$identity)->first();
-		
-		if(!$user){
-			$this->response['code']= "0022";
-			$this->response['message']= "Email/UserName doesnot exist";
-			return Response::json($this->response);
-		}
+    public static function findIdentityType($identity)
+    {
+        return (strpos($identity, '@')) ? 'email' : 'userName';
+    }
 
-		$forgotPasswordToken = str_random(30);
-
-
-		DB::table('users')->Where($identityType,$identity)
-								  ->update(['forgotPasswordToken'=>$forgotPasswordToken]);
-		$user = User::where($identityType,$identity)->first();
-		// return response($user);
-		// return response(json_encode($user));
-
-		/*$mailSuccess = */ 
-		\Mail::to($user)->send(new ForgotPasswordEmail($user));
-			// if ($mailSuccess){
-				$this->response['code']= "0023";
-				$this->response['message']= "Password reset link has been sent to your email";
-				return Response::json($this->response);			// }
-			// else{
-			// 	return response(json_encode(array('code'=>'0016',
-			// 								'message'=>'Could not send mail')));
-			// }
-	}
-
-	public function forgotPasswordForm($email, $forgotPasswordToken)
-	{
-		$this->response = [];
-		$user = User::Where('email',$email)->first();
-		if($user->forgotPasswordToken != $forgotPasswordToken){
-			$this->response['code']= "0053";
-			$this->response['message']= "Invalid request";
-			return Response::json($this->response);
-		}
-		else{
-			// return response($user->email);
-			return view('forgotPasswordForm')->with('user',$user);
-		}
-	}
-
-	public function forgotPasswordStore(Request $request)
-	{
-		$this->response = [];
-
-		DB::table('users')->where('email',$request->email)
-						  ->update(['password'=>bcrypt($request->password)]);
-
-		$this->response['code']= "0024";
-		$this->response['message']= "password updated successfully";
-		return Response::json($this->response);
-	}
-
-	public static function findIdentityType($identity)
-	{
-		if (strpos($identity,'@')){
-			return('email');
-		}
-		else{
-			return('userName');	
-		}
-	}
-
-	public function delete()
-	{
-		//
-	}
+    public function checkValidApiToken($apiToken)
+    {
+        //Check Valid api token
+        //to be done later
+    }
 }

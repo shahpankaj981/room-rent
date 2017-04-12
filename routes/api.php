@@ -25,7 +25,7 @@ Route::get('/show/{userId}','UserController@show');
 
 Route::post('/forgotPassword','UserController@forgotPassword');
 
-Route::get('/forgotPasswordForm/{email}/{forgotPasswordToken}', 
+Route::get('/showForgotPasswordForm/{email}/{forgotPasswordToken}',
 										'UserController@forgotPasswordForm');
 
 Route::post('/savePassword','UserController@forgotPasswordStore');
@@ -37,3 +37,5 @@ Route::post('/login','UserController@login');
 Route::put('/update','UserController@update');
 
 Route::put('/changePassword','UserController@changePassword');
+
+Route::get('/delete/{id}','UserController@delete');

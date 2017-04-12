@@ -10,6 +10,6 @@
 
 		Welcome to Room-rent app, {{$user->name}}!!!!! <br>
 		Please follow the following link to reset your password:
-		<a href="http://roomrent.dev/api/forgotPasswordForm/{{$user->email}}/{{$user->forgotPasswordToken}}">Reset Your Password</a>
+		<a href="http://roomrent.dev/api/showForgotPasswordForm/{{$user->email}}/{{$user->forgotPasswordToken}}">Reset Your Password</a>
 </body>
 </html>

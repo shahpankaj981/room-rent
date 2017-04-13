@@ -21,12 +21,14 @@ Route::post('/register','UserController@store');
 
 Route::get('/registration/{token}','UserController@register');
 
+
+Route::get('/test/{id}', 'UserController@show');
+
 Route::get('/show/{userId}','UserController@show');
 
 Route::post('/forgotPassword','UserController@forgotPassword');
 
-Route::get('/showForgotPasswordForm/{email}/{forgotPasswordToken}',
-										'UserController@forgotPasswordForm');
+Route::get('/showForgotPasswordForm/{email}/{forgotPasswordToken}','UserController@forgotPasswordForm');
 
 Route::post('/savePassword','UserController@forgotPasswordStore');
 
@@ -39,3 +41,11 @@ Route::put('/update','UserController@update');
 Route::put('/changePassword','UserController@changePassword');
 
 Route::get('/delete/{id}','UserController@delete');
+
+Route::post('/savePost', 'PostController@savePost');
+
+Route::get('/fetchAllPost', 'PostController@fetchAllPost');
+
+Route::get('/fetchAllOffer', 'PostController@fetchAllOffer');
+
+Route::get('/fetchAllAsk', 'PostController@fetchAllAsk');

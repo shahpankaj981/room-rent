@@ -18,69 +18,82 @@ class UserController extends Controller
     protected $response;
 
     protected $user;
+    protected $auth;
 
-    public function __construct(User $user)
+    /**
+     * UserController constructor.
+     * @param User $user
+     * @param Auth $auth
+     */
+    public function __construct(User $user, Auth $auth)
     {
         $this->user = $user;
+        $this->auth = $auth;
     }
 
+    /**
+     * This function logs in the user.
+     * @param Request $request
+     * @return mixed
+     */
     public function login(Request $request)
     {
         $this->response = [];
         $apiToken       = "OD44GCYFpHYHcwYFTG1QsQBGPOLcHjk8OMOMPkd3Ew3RTaLX0ox2ES3UASxE";
-        if($request->apiToken != $apiToken){
+        if ($request->apiToken != $apiToken) {
             $this->response['code']    = "0052";
             $this->response['message'] = "Invalid Token";
+
             return Response::json($this->response);
         }
         $identity     = $request->identity;
         $password     = $request->password;
         $deviceType   = $request->deviceType;
         $deviceToken  = $request->deviceToken;
-        $identityType = static::findIdentityType($identity);
-        $user         = User::where($identityType, $identity)->first();
+        $identityType = $this->findIdentityType($identity);
+        $user         = $this->user->where($identityType, $identity)->first();
 
-        if(!$user){
+        if (!$user) {
             $this->response['code']    = "0003";
             $this->response['message'] = "Email/UserName does not exist";
+
             return Response::json($this->response);
-        }
-        elseif(!(Auth::attempt([$identityType => $identity, 'password' => $password]))){
+        } elseif (!(Auth::attempt([$identityType => $identity, 'password' => $password]))) {
             $this->response['code']    = "0004";
             $this->response['message'] = "Invalid password";
+
             return Response::json($this->response);
-        }
-        else{
-            if(!$user->activation){
+        } else {
+            if (!$user->activation) {
                 $this->response['code']    = "0031";
                 $this->response['message'] = "Verify your account in email";
+
                 return Response::json($this->response);
-            }
-            else{
+            } else {
                 $apiToken      = str_random(30);
                 $existingLogin = ApiToken::where([
                     ['userId', '=', $user->userId],
                     ['deviceType', '=', $deviceType],
                     ['deviceToken', '=', $deviceToken],
                 ])->first();
-                if($existingLogin){
+                if ($existingLogin) {
                     ApiToken::where([
                         ['userId', '=', $user->userId],
                         ['deviceToken', '=', $deviceToken],
                         ['deviceType', '=', $deviceType],
                     ])->update(['apiToken' => $apiToken]);
-                }
-                else{
+                } else {
                     ApiToken::insert(['userId'      => $user->userId,
                                       'deviceType'  => $deviceType,
                                       'apiToken'    => $apiToken,
                                       'deviceToken' => $deviceToken,
                     ]);
                 }
-                $this->response['code']     = '0001';
+                $this->response['code']     = '0011';
                 $this->response['message']  = 'Successful login';
                 $this->response['apiToken'] = $apiToken;
                 $this->response['user']     = $user;
+
                 return Response::json($this->response);
             }
         }
@@ -91,9 +104,10 @@ class UserController extends Controller
         $this->response = [];
         $apiToken       = "OD44GCYFpHYHcwYFTG1QsQBGPOLcHjk8OMOMPkd3Ew3RTaLX0ox2ES3UASxE";
 
-        if($request->apiToken != $apiToken){
+        if ($request->apiToken != $apiToken) {
             $this->response['code']    = "0052";
             $this->response['message'] = "Invalid Token";
+
             return Response::json($this->response);
         }
         $user              = new User;
@@ -102,9 +116,10 @@ class UserController extends Controller
         $existingUserCount = DB::table('users')
             ->where('email', $user->email)
             ->count();
-        if($existingUserCount > 0){
+        if ($existingUserCount > 0) {
             $this->response['code']    = "0017";
             $this->response['message'] = "This email is already registered";
+
             return Response::json($this->response);
         }
 
@@ -113,9 +128,10 @@ class UserController extends Controller
             ->where('userName', $user->userName)
             ->count();
 
-        if($existingUserCount > 0){
+        if ($existingUserCount > 0) {
             $this->response['code']    = "0018";
             $this->response['message'] = "This user name is already taken";
+
             return Response::json($this->response);
         }
 
@@ -130,17 +146,17 @@ class UserController extends Controller
         //For profile Image
 
         $success = $user->save();
-        if($success){
+        if ($success) {
             \Mail::to($user)->send(new ActivationEmail($user));
-
             $this->response['code']    = "0013";
             $this->response['message'] = "User registered";
             $this->response['user']    = $user;
+
             return Response::json($this->response);
-        }
-        else{
+        } else {
             $this->response['code']    = "0035";
             $this->response['message'] = "Database error";
+
             return Response::json($this->response);
         }
     }
@@ -148,15 +164,16 @@ class UserController extends Controller
     public function register($token)
     {
         $this->response = [];
-        $user           = User::where('confirmationCode', $token)->first();
+        $user           = $this->user->where('confirmationCode', $token)->first();
 
-        if(!$user){
+        if (!$user) {
             $this->response['code']    = "0033";
             $this->response['message'] = "User Already active";
+
             return Response::json($this->response);
         }
 
-        if($user->confirmationCode == $token){
+        if ($user->confirmationCode == $token) {
             $user->activation       = 1;
             $user->confirmationCode = null;
 
@@ -168,10 +185,10 @@ class UserController extends Controller
             $this->response['message'] = "User succesfully registered";
 
             return Response::json($this->response);
-        }
-        else{
+        } else {
             $this->response['code']    = "0053";
             $this->response['message'] = "Invalid request";
+
             return Response::json($this->response);
         }
     }
@@ -180,14 +197,15 @@ class UserController extends Controller
     {
         $logoutSuccess = ApiToken::where('userApiToken', $request->userApiToken)
             ->delete();
-        if($logoutSuccess){
+        if ($logoutSuccess) {
             $this->response['code']    = "0020";
             $this->response['message'] = "Logged out successfully";
+
             return Response::json($this->response);
-        }
-        else{
+        } else {
             $this->response['code']    = "0021";
             $this->response['message'] = "Problem occurred during logout";
+
             return Response::json($this->response);
         }
     }
@@ -214,6 +232,7 @@ class UserController extends Controller
         $this->response['code']    = "0026";
         $this->response['message'] = "profile updated successfully";
         $this->response['user']    = $user;
+
         return Response::json($this->response);
     }
 
@@ -223,22 +242,24 @@ class UserController extends Controller
         $userData       = ApiToken::where('userApiToken', $request->apiToken)->first();
         $user           = User::where('userId', $userData->userId)->first();
 
-        if(!Hash::check($request->oldPassword, $user->password)){
+        if (!Hash::check($request->oldPassword, $user->password)) {
             $this->response['code']    = "0021";
             $this->response['message'] = "Old password doesn\'t match";
+
             return Response::json($this->response);
         }
-        if(is_null($request->newPassword)){
+        if (is_null($request->newPassword)) {
             $this->response['code']    = "0027";
             $this->response['message'] = "The password cannot be empty";
+
             return Response::json($this->response);
-        }
-        else{
+        } else {
             User::where('userId', $userData->userId)
                 ->update(['password' => bcrypt($request->newPassword)]);
             $this->response['code']    = "0024";
             $this->response['message'] = "The password has been changed";
-            $this->response['users']   = $user;
+            $this->response['user']   = $user;
+
             return Response::json($this->response);
         }
     }
@@ -250,9 +271,10 @@ class UserController extends Controller
         $identityType   = $this->findIdentityType($identity);
         $user           = User::Where($identityType, $identity)->first();
 
-        if(!$user){
+        if (!$user) {
             $this->response['code']    = "0022";
             $this->response['message'] = "Email/UserName doesnot exist";
+
             return Response::json($this->response);
         }
         $forgotPasswordToken = str_random(30);
@@ -266,6 +288,7 @@ class UserController extends Controller
 
         $this->response['code']    = "0023";
         $this->response['message'] = "Password reset link has been sent to your email";
+
         return Response::json($this->response);
     }
 
@@ -273,12 +296,12 @@ class UserController extends Controller
     {
         $this->response = [];
         $user           = User::Where('email', $email)->first();
-        if($user->forgotPasswordToken != $forgotPasswordToken){
+        if ($user->forgotPasswordToken != $forgotPasswordToken) {
             $this->response['code']    = "0053";
             $this->response['message'] = "Invalid request";
+
             return Response::json($this->response);
-        }
-        else{
+        } else {
             return view('forgotPasswordForm')->with('user', $user);
         }
     }
@@ -288,13 +311,14 @@ class UserController extends Controller
         User::where('email', $request->email)
             ->update(['password' => bcrypt($request->password)]);
 
-        $this->response = [];
+        $this->response            = [];
         $this->response['code']    = "0024";
         $this->response['message'] = "password updated successfully";
+
         return Response::json($this->response);
     }
 
-    public static function findIdentityType($identity)
+    protected function findIdentityType($identity)
     {
         return (strpos($identity, '@')) ? 'email' : 'userName';
     }

@@ -27,15 +27,20 @@ Route::post('/forgotPassword','UserController@forgotPassword');
 
 Route::get('/showForgotPasswordForm/{email}/{forgotPasswordToken}','UserController@forgotPasswordForm');
 
-Route::post('/savePassword','UserController@forgotPasswordStore');
+Route::post('/savePassword','UserController@forgotPasswordStore')->name('savePassword');
 
 Route::post('/logout','UserController@logout');
 
 Route::post('/login','UserController@login');
 
+Route::get('/getfile/{filename}', 'FileentryController@get')
+    ->name('file.get');
+
 Route::put('/update','UserController@update');
 
 Route::put('/changePassword','UserController@changePassword');
+
+Route::put('/updateProfileImage', 'UserController@updateProfileImage');
 
 Route::get('/delete/{id}','UserController@delete');
 

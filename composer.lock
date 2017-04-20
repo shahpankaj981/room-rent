@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "ee731f7eb5e0aa45d1aa195dcb2e768d",
+    "content-hash": "96098e473b028cdb2529580554a1ae3e",
     "packages": [
         {
             "name": "dnoegel/php-xdg-base-dir",
@@ -237,16 +237,16 @@
         },
         {
             "name": "laravel/framework",
-            "version": "v5.4.17",
+            "version": "v5.4.18",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/framework.git",
-                "reference": "f7675d59e3863a58ecdff1a5ee1dcd0cff788f4b"
+                "reference": "d15ded55b5e690199393ea93a57edcbae20d1ffc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/framework/zipball/f7675d59e3863a58ecdff1a5ee1dcd0cff788f4b",
-                "reference": "f7675d59e3863a58ecdff1a5ee1dcd0cff788f4b",
+                "url": "https://api.github.com/repos/laravel/framework/zipball/d15ded55b5e690199393ea93a57edcbae20d1ffc",
+                "reference": "d15ded55b5e690199393ea93a57edcbae20d1ffc",
                 "shasum": ""
             },
             "require": {
@@ -362,7 +362,7 @@
                 "framework",
                 "laravel"
             ],
-            "time": "2017-04-03T13:07:39+00:00"
+            "time": "2017-04-10T19:27:41+00:00"
         },
         {
             "name": "laravel/tinker",
@@ -2012,53 +2012,6 @@
             "time": "2015-05-11T14:41:42+00:00"
         },
         {
-            "name": "illuminate/html",
-            "version": "v5.0.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/illuminate/html.git",
-                "reference": "3d1009bb8e0f25720c914af5c1f4015dd373c9ef"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/illuminate/html/zipball/3d1009bb8e0f25720c914af5c1f4015dd373c9ef",
-                "reference": "3d1009bb8e0f25720c914af5c1f4015dd373c9ef",
-                "shasum": ""
-            },
-            "require": {
-                "illuminate/http": "~5.0",
-                "illuminate/session": "~5.0",
-                "illuminate/support": "~5.0",
-                "php": ">=5.4.0"
-            },
-            "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-master": "5.0-dev"
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "Illuminate\\Html\\": ""
-                },
-                "files": [
-                    "helpers.php"
-                ]
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Taylor Otwell",
-                    "email": "taylorotwell@gmail.com"
-                }
-            ],
-            "abandoned": "laravelcollective/html",
-            "time": "2015-01-01T16:31:18+00:00"
-        },
-        {
             "name": "mockery/mockery",
             "version": "0.9.9",
             "source": {
@@ -2125,16 +2078,16 @@
         },
         {
             "name": "myclabs/deep-copy",
-            "version": "1.6.0",
+            "version": "1.6.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/myclabs/DeepCopy.git",
-                "reference": "5a5a9fc8025a08d8919be87d6884d5a92520cefe"
+                "reference": "8e6e04167378abf1ddb4d3522d8755c5fd90d102"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/myclabs/DeepCopy/zipball/5a5a9fc8025a08d8919be87d6884d5a92520cefe",
-                "reference": "5a5a9fc8025a08d8919be87d6884d5a92520cefe",
+                "url": "https://api.github.com/repos/myclabs/DeepCopy/zipball/8e6e04167378abf1ddb4d3522d8755c5fd90d102",
+                "reference": "8e6e04167378abf1ddb4d3522d8755c5fd90d102",
                 "shasum": ""
             },
             "require": {
@@ -2163,7 +2116,7 @@
                 "object",
                 "object graph"
             ],
-            "time": "2017-01-26T22:05:40+00:00"
+            "time": "2017-04-12T18:52:22+00:00"
         },
         {
             "name": "phpdocumentor/reflection-common",

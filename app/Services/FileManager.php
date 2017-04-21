@@ -2,9 +2,10 @@
 
 namespace App\Services;
 
-use App\Fileentry;
+use App\FileEntry;
 use Illuminate\Support\Facades\Storage;
 use Mockery\Exception;
+use Illuminate\Support\Facades\File;
 
 /**
  * Class FileManager
@@ -21,7 +22,7 @@ class FileManager
      * @param FileEntry $fileEntry
      * @param Storage   $storage
      */
-    public function __construct(Fileentry $fileEntry, Storage $storage)
+    public function __construct(FileEntry $fileEntry, Storage $storage)
     {
         $this->fileEntry = $fileEntry;
         $this->storage   = $storage;
@@ -56,22 +57,5 @@ class FileManager
         return $entry;
     }
 
-    /** returns the image file
-     * @param $filename
-     * @return \Illuminate\Contracts\Routing\ResponseFactory|\Symfony\Component\HttpFoundation\Response
-     */
-    public function getFile($filename)
-    {
-        $entry = Fileentry::whereFilename($filename)->first();
-        if (!$entry) {
-            return response("invalid filename");
-        }
-        try {
-            $file = $this->storage->disk('local')->get($entry->filename);
-        } catch (Exception $e) {
-            return response("file can't be read");
-        }
 
-        return response($file, 200)->header('Content-Type', $entry->mime);
-    }
 }

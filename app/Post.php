@@ -15,7 +15,7 @@ class Post extends Model
      * @var array
      */
     protected $fillable = [
-        'userId', 'location', 'numberOfRooms', 'type','description','price','postType',
+        'userId', 'location', 'numberOfRooms','description','price','postType',
     ];
 
     /**

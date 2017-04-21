@@ -39,6 +39,9 @@ Route::put('/changePassword','UserController@changePassword');
 
 Route::get('/delete/{id}','UserController@delete');
 
+Route::get('/getFile/{filename}', 'FileEntryController@getFile')
+    ->name('file.get');
+
 Route::post('/savePost', 'PostController@savePost');
 
 Route::get('/fetchAllPost', 'PostController@fetchAllPost');

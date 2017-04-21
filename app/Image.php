@@ -4,9 +4,9 @@ namespace App;
 
 use Illuminate\Database\Eloquent\Model;
 
-class FileEntry extends Model
+class Image extends Model
 {
-    protected $table    = 'fileentries';
+    protected $table    = 'images';
     protected $fillable = [
         'filename',
         'mime',
@@ -18,4 +18,9 @@ class FileEntry extends Model
         'updated_at',
         'deleted_at',
     ];
+//
+//    public function posts()
+//    {
+//        return $this->belongsTo
+//    }
 }

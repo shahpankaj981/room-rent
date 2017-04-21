@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Storage;
 use App\Services\FileManager;
 use Illuminate\Http\Request;
 
-class FileEntryController extends Controller
+class ImageController extends Controller
 {
     /** returns the image file
      * @param $filename
@@ -15,7 +15,7 @@ class FileEntryController extends Controller
      */
     public function getFile($filename)
     {
-        $entry = FileEntry::whereFilename($filename)->first();
+        $entry = Image::whereFilename($filename)->first();
         if (!$entry) {
             return response("invalid filename");
         }

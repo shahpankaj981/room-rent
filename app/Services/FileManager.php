@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\FileEntry;
+use App\Image;
 use Illuminate\Support\Facades\Storage;
 use Mockery\Exception;
 use Illuminate\Support\Facades\File;
@@ -14,17 +14,17 @@ use Illuminate\Support\Facades\File;
 class FileManager
 {
 
-    protected $fileEntry;
+    protected $image;
     protected $storage;
 
     /**
      * FileManager constructor.
-     * @param FileEntry $fileEntry
+     * @param image $image
      * @param Storage   $storage
      */
-    public function __construct(FileEntry $fileEntry, Storage $storage)
+    public function __construct(Image $image, Storage $storage)
     {
-        $this->fileEntry = $fileEntry;
+        $this->image = $image;
         $this->storage   = $storage;
     }
 
@@ -49,7 +49,7 @@ class FileManager
             'filename'          => $filename,
         ];
         try {
-            $entry = $this->fileEntry->create($fileData);
+            $entry = $this->image->create($fileData);
         } catch (Exception $e) {
             return $e->getMessage();
         }

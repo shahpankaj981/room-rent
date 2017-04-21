@@ -2,13 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\FileEntry;
+use App\Image;
 use App\Http\Requests\UsersRequest;
 use App\Services\FileManager;
 use Illuminate\Http\Request;
 use App\User;
 use App\ApiToken;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\File;
 use App\Mail\ActivationEmail;
 use App\Mail\ForgotPasswordEmail;
 use Illuminate\Support\Facades\Hash;
@@ -22,7 +24,7 @@ class UserController extends Controller
     protected $fileManager;
     protected $user;
     protected $apiToken;
-    protected $fileEntry;
+    protected $image;
 
 
     /**
@@ -30,14 +32,14 @@ class UserController extends Controller
      * @param User        $user
      * @param FileManager $fileManager
      * @param ApiToken    $apiToken
-     * @param FileEntry   $fileEntry
+     * @param Image   $image
      */
-    public function __construct(User $user, FileManager $fileManager, ApiToken $apiToken, FileEntry $fileEntry)
+    public function __construct(User $user, FileManager $fileManager, ApiToken $apiToken, Image $image)
     {
         $this->fileManager = $fileManager;
         $this->user        = $user;
         $this->apiToken    = $apiToken;
-        $this->fileEntry   = $fileEntry;
+        $this->image   = $image;
     }
 
     /**
@@ -156,8 +158,27 @@ class UserController extends Controller
 
             return Response::json($this->response);
         }
-        $data['profileImageId'] = $this->saveProfileImage($request);
-        $user                 = $this->user->create($data);
+//        $data['profileImageId'] = $this->saveProfileImage($request);
+        if ($request->hasFile('profileImage') &&
+            $request->file('profileImage')->isValid()
+        ) {
+            $file      = $request->file('profileImage');
+            $extension = $file->getClientOriginalExtension();
+            $filename  = str_random(20).$file->getFilename().'.'.$extension;
+
+            try {
+                Storage::disk('local')->put($filename, File::get($file));
+            } catch (Exception $e) {
+                return null;
+            }
+            $image = new Image();
+            $image->mime              = $file->getClientMimeType();
+            $image->original_filename = $file->getClientOriginalName();
+            $image->imageType = 1;
+            $image->filename          = $filename;
+            $user = $this->user->create($data);
+            $user->image()->save($image);
+            }
         if ($user) {
             \Mail::to($user)->send(new ActivationEmail($user));
             $this->response['code']    = "0013";

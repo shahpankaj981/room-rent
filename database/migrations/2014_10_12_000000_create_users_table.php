@@ -20,7 +20,7 @@ class CreateUsersTable extends Migration
             $table->string('name');
             $table->string('password');
             $table->string('phone');
-            $table->integer('profileImageId')->default(1)->unsigned();
+//            $table->integer('profileImageId')->default(1)->unsigned();
             $table->boolean('activation');
             $table->string('confirmationCode');
             $table->string('forgotPasswordToken');

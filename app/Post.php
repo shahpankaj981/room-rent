@@ -26,4 +26,9 @@ class Post extends Model
     protected $hidden = [
 
     ];
+
+    public function image()
+    {
+        return $this->hasMany('App/Image', 'postId', 'postId');
+    }
 }

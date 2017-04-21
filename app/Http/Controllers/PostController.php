@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\ApiToken;
+use App\Image;
 use App\Post;
 use App\Services\FileManager;
 use App\User;
@@ -16,66 +18,89 @@ class PostController extends Controller
     protected $post;
     protected $response = [];
     protected $fileManager;
+    protected $apiToken;
+    protected $image;
 
-    public function __construct(Post $post, User $user, FileManager $fileManager)
+    public function __construct(Post $post, User $user, FileManager $fileManager, ApiToken $apiToken, Image $image)
     {
         $this->fileManager = $fileManager;
-        $this->user = $user;
-        $this->post = $post;
+        $this->user        = $user;
+        $this->post        = $post;
+        $this->apiToken    = $apiToken;
+        $this->image = $image;
     }
 
     public function savePost(Request $request)
     {
-        $this->response            = [];
-        $data                      = $this->fetchDataFromRequest($request);
-        $post                      = $this->post->create($data);
+        $this->response = [];
+        $data           = $this->fetchDataFromRequest($request);
+        $post           = $this->post->create($data);
         if ($request->hasFile('images')) {
             $files = $request->file('images');
             $entry = [];
-            $i = 0;
+            $i     = 0;
             foreach ($files as $file) {
                 $entry[$i] = $this->fileManager->saveFile($file);
                 DB::table('postImages')->insert(['imageId' => $entry[$i]->id, 'postId' => $post->id]);
                 $i++;
             }
         }
-        $this->response['post']    = $post;
-        $this->response['postImages'] = array($entry);
+        $this->response['post']       = $post;
+        $this->response['postImages'] = [$entry];
         //$this->response['postImages'] = getImages($entry); //function to fetch the images from database
-        if($post){
+        if ($post) {
             $this->response['code']    = "1000";
             $this->response['message'] = "Post added successfully";
+
             return Response::json($this->response);
-        }
-        else{
+        } else {
             $this->response['code']    = "1001";
             $this->response['message'] = "Problem adding a Post";
+
             return Response::json($this->response);
         }
     }
 
     public function fetchAllPost()
     {
-
         $this->post = Post::All();
+
         return Response::json($this->post);
+    }
+
+    public function fetchPersonalPost($apiToken)
+    {
+        $userId = $this->getLoggedInUserId($apiToken);
+        $post   = $this->post->where('userId', $userId)->get();
+        if ($post) {
+            $this->response['code']    = "0000";
+            $this->response['message'] = "Posts fetched successfully";
+            $this->response['posts']   = $post;
+        } else {
+            $this->response['code']    = '0001';
+            $this->response['message'] = 'No posts to display';
+        }
+
+        return Response::json($this->response);
     }
 
     public function fetchAllOffer()
     {
-        $this->post = Post::where('postType',1)->get();
+        $this->post = $this->post->where('postType', 1)->get();
+
         return Response::json($this->post);
     }
 
     public function fetchAllAsk()
     {
-        $post = DB::table('posts')->where('postType',0)->get();
+        $post = $this->post->where('postType', 0)->get();
+
         return Response::json($post);
     }
+
     public function fetchDataFromRequest(Request $request)
     {
-        $apiToken = $request->apiToken;
-        $userId   = DB::table('api_tokens')->where('apiToken', $apiToken)->pluck('userId');
+        $userId = $this->getLoggedInUserId($request->apiToken);
 
         return ([
             'userId'        => $userId[0],
@@ -86,5 +111,23 @@ class PostController extends Controller
             'price'         => $request->price,
             'postType'      => $request->postType,
         ]);
+    }
+
+    public function fetchImages($postId)
+    {
+        $images = [];
+        $imageId = DB::table('postImages')->where('postId', $postId)->pluck('imageId');
+        foreach ($imageId as $id) {
+            $image = $this->fileEntry->where('id', $id)->get();
+            $images = route('file.get', $image->filename);
+        }
+        return $images;
+    }
+
+    public function getLoggedInUserId($apiToken)
+    {
+        $userId = $this->apiToken->where('apiToken', $apiToken)->pluck('userId');
+
+        return $userId;
     }
 }

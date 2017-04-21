@@ -17,8 +17,8 @@ class CreatePostImagesTable extends Migration
             $table->increments('id');
             $table->integer('imageId')->unsigned();
             $table->integer('postId')->unsigned();
-            $table->foreign('imageId')->references('id')->on('fileentries');
-            $table->foreign('postId')->references('postId')->on('posts');
+//            $table->foreign('imageId')->references('id')->on('fileentries');
+//            $table->foreign('postId')->references('postId')->on('posts');
             $table->timestamps();
         });
     }

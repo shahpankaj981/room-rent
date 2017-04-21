@@ -4,6 +4,7 @@ namespace App;
 
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use App\FileEntry;
 
 class User extends Authenticatable
 {
@@ -26,4 +27,9 @@ class User extends Authenticatable
     protected $hidden = [
         'password', 'remember_token', 'confirmationCode', 'forgotPasswordToken', 'activation',
     ];
+
+    public function image()
+    {
+        return $this->hasOne('App/Image', 'userId', 'userId');
+    }
 }

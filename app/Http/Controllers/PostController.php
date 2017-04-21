@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\ApiToken;
 use App\Post;
+use App\Services\FileManager;
 use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -12,8 +12,14 @@ use Illuminate\Support\Facades\Response;
 
 class PostController extends Controller
 {
-    public function __construct(Post $post, User $user)
+    protected $user;
+    protected $post;
+    protected $response = [];
+    protected $fileManager;
+
+    public function __construct(Post $post, User $user, FileManager $fileManager)
     {
+        $this->fileManager = $fileManager;
         $this->user = $user;
         $this->post = $post;
     }
@@ -23,7 +29,19 @@ class PostController extends Controller
         $this->response            = [];
         $data                      = $this->fetchDataFromRequest($request);
         $post                      = $this->post->create($data);
+        if ($request->hasFile('images')) {
+            $files = $request->file('images');
+            $entry = [];
+            $i = 0;
+            foreach ($files as $file) {
+                $entry[$i] = $this->fileManager->saveFile($file);
+                DB::table('postImages')->insert(['imageId' => $entry[$i]->id, 'postId' => $post->id]);
+                $i++;
+            }
+        }
         $this->response['post']    = $post;
+        $this->response['postImages'] = array($entry);
+        //$this->response['postImages'] = getImages($entry); //function to fetch the images from database
         if($post){
             $this->response['code']    = "1000";
             $this->response['message'] = "Post added successfully";

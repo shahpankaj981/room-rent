@@ -17,11 +17,11 @@ class CreatePostsTable extends Migration
             $table->increments('id');
             $table->integer('userId')->unsigned();
             $table->string('location');
-            $table->float('latitude');
-            $table->float('longitude');
+            $table->decimal('latitude', 10, 4);
+            $table->decimal('longitude', 10, 4);
             $table->integer('numberOfRooms');
             $table->string('description');
-            $table->integer('price');
+            $table->integer('price')->nullable();
             $table->boolean('postType');
             $table->timestamps();
             $table->foreign('userId')->references('id')->on('users');

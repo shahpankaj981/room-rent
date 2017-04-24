@@ -17,9 +17,9 @@ use Illuminate\Http\Request;
 //     return $request->user();
 // });
 
-Route::post('/register','UserController@store');
+Route::post('user/create','UserController@store');
 
-Route::get('/registration/{token}','UserController@register');
+Route::get('/registration/{token}','UserController@activation');
 
 Route::get('/show/{userId}','UserController@show');
 
@@ -33,7 +33,7 @@ Route::post('/logout','UserController@logout');
 
 Route::post('/login','UserController@login');
 
-Route::put('/update','UserController@update');
+Route::put('user/update','UserController@update');
 
 Route::put('/changePassword','UserController@changePassword');
 
@@ -42,9 +42,11 @@ Route::get('/delete/{id}','UserController@delete');
 Route::get('/getFile/{filename}', 'ImageController@getFile')
     ->name('file.get');
 
-Route::post('/savePost', 'PostController@savePost');
+Route::post('post/create', 'PostController@savePost');
 
 Route::get('/fetchAllPost', 'PostController@fetchAllPost');
+
+Route::get('/fetchPostOfParticularArea', 'PostController@fetchPostOfParticularArea');
 
 Route::get('/fetchPersonalPost/{apiToken}', 'PostController@fetchPersonalPost');
 

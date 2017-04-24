@@ -34,20 +34,12 @@ class PostController extends Controller
     {
         $data = $this->fetchDataFromRequest($request);
         $post = $this->post->create($data);
+
         if ($request->hasFile('images')) {
-
             $files = $request->file('images');
-
-//            $entry = [];
-//            $i     = 0;
-//            foreach ($files as $file) {
             $post = $this->fileManager->saveFile($post, $files, "post");
-//                DB::table('postImages')->insert(['imageId' => $entry[$i]->id, 'postId' => $post->id]);
-//                $i++;
-//            }
         }
-        $this->response['post']       = $post;
-        //$this->response['postImages'] = getImages($entry); //function to fetch the images from database
+        $this->response['post'] = $post;
         if ($post) {
             $this->response['code']    = "1000";
             $this->response['message'] = "Post added successfully";
@@ -63,28 +55,33 @@ class PostController extends Controller
 
     public function fetchAllPost()
     {
-        $posts = Post::All();
-        $this->response['post'] = [];
-//        dd($posts->image);
-        foreach ($posts as $post){
-            $this->response['post'] = $post;
-            $this->response['post']['images'] = [];
-            foreach($post->image as $image){
-                $this->response['post']['images'] = route('file.get', $image->filename);
-            }
-        }
-
+        $posts                  = Post::All();
+        $this->response['post'] = $this->getPostDetails($posts);
         return Response::json($this->response);
     }
 
+    public function getPostDetails($posts)
+    {
+        $completePost = [];
+        foreach ($posts as $post) {
+            $filenameList = $this->image->where('postId', $post->id)->pluck('filename');
+            $images = [];
+            foreach ($filenameList as $filename) {
+                array_push($images, route('file.get', $filename));
+            }
+            $post['images'] = $images;
+            array_push($completePost,$post);
+        }
+        return ($completePost);
+    }
     public function fetchPersonalPost($apiToken)
     {
         $userId = $this->getLoggedInUserId($apiToken);
-        $post   = $this->post->where('userId', $userId)->get();
-        if ($post) {
+        $posts   = $this->post->where('userId', $userId)->get();
+        if ($posts) {
             $this->response['code']    = "0000";
             $this->response['message'] = "Posts fetched successfully";
-            $this->response['posts']   = $post;
+            $this->response['post'] =  $this->getPostDetails($posts);
         } else {
             $this->response['code']    = '0001';
             $this->response['message'] = 'No posts to display';
@@ -93,18 +90,13 @@ class PostController extends Controller
         return Response::json($this->response);
     }
 
-    public function fetchAllOffer()
+    public function fetchPost($postType)
     {
-        $this->post = $this->post->where('postType', 1)->get();
-
-        return Response::json($this->post);
-    }
-
-    public function fetchAllAsk()
-    {
-        $post = $this->post->where('postType', 0)->get();
-
-        return Response::json($post);
+        $posts = $this->post->where('postType', $postType)->get();
+            $this->response['code']    = "0000";
+            $this->response['message'] = "Posts fetched successfully";
+            $this->response['post'] =  $this->getPostDetails($posts);
+        return Response::json($this->response);
     }
 
     public function fetchDataFromRequest(Request $request)

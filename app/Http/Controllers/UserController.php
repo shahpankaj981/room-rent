@@ -105,7 +105,10 @@ class UserController extends Controller
 //                    return response(json_encode($profileImage));
 //                    if ($user->profileImageId) {
 //                        $image                          = $this->fileEntry->find($user->profileImageId);
+                if($user->image){
                     $this->response['profileImage'] = route('file.get', $user->image->filename);
+                }
+
 //                    }
                     $this->response['code']     = '0011';
                     $this->response['message']  = 'Successful login';

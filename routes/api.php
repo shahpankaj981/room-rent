@@ -48,6 +48,4 @@ Route::get('/fetchAllPost', 'PostController@fetchAllPost');
 
 Route::get('/fetchPersonalPost/{apiToken}', 'PostController@fetchPersonalPost');
 
-Route::get('/fetchAllOffer', 'PostController@fetchAllOffer');
-
-Route::get('/fetchAllAsk', 'PostController@fetchAllAsk');
+Route::get('/fetchPost/{postType}', 'PostController@fetchPost');

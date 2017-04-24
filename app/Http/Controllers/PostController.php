@@ -34,15 +34,14 @@ class PostController extends Controller
     {
         $data = $this->fetchDataFromRequest($request);
         $post = $this->post->create($data);
-
-        if ($request->hasFile('images')) {
-            $files = $request->file('images');
-            $post = $this->fileManager->saveFile($post, $files, "post");
-        }
-        $this->response['post'] = $post;
         if ($post) {
+            if ($request->hasFile('images')) {
+                $files = $request->file('images');
+                $post  = $this->fileManager->saveFile($post, $files, "post");
+            }
             $this->response['code']    = "1000";
             $this->response['message'] = "Post added successfully";
+            $this->response['post']    = $post;
 
             return Response::json($this->response);
         } else {
@@ -57,31 +56,18 @@ class PostController extends Controller
     {
         $posts                  = Post::All();
         $this->response['post'] = $this->getPostDetails($posts);
+
         return Response::json($this->response);
     }
 
-    public function getPostDetails($posts)
-    {
-        $completePost = [];
-        foreach ($posts as $post) {
-            $filenameList = $this->image->where('postId', $post->id)->pluck('filename');
-            $images = [];
-            foreach ($filenameList as $filename) {
-                array_push($images, route('file.get', $filename));
-            }
-            $post['images'] = $images;
-            array_push($completePost,$post);
-        }
-        return ($completePost);
-    }
     public function fetchPersonalPost($apiToken)
     {
         $userId = $this->getLoggedInUserId($apiToken);
-        $posts   = $this->post->where('userId', $userId)->get();
+        $posts  = $this->post->where('userId', $userId)->get();
         if ($posts) {
             $this->response['code']    = "0000";
             $this->response['message'] = "Posts fetched successfully";
-            $this->response['post'] =  $this->getPostDetails($posts);
+            $this->response['post']    = $this->getPostDetails($posts);
         } else {
             $this->response['code']    = '0001';
             $this->response['message'] = 'No posts to display';
@@ -92,38 +78,61 @@ class PostController extends Controller
 
     public function fetchPost($postType)
     {
-        $posts = $this->post->where('postType', $postType)->get();
-            $this->response['code']    = "0000";
-            $this->response['message'] = "Posts fetched successfully";
-            $this->response['post'] =  $this->getPostDetails($posts);
+        $posts                     = $this->post->where('postType', $postType)->get();
+        $this->response['code']    = "0000";
+        $this->response['message'] = "Posts fetched successfully";
+        $this->response['post']    = $this->getPostDetails($posts);
+
         return Response::json($this->response);
+    }
+
+    public function fetchPostOfParticularArea(Request $request)
+    {
+        $latitude                  = $request->latitude;
+        $longitude                 = $request->longitude;
+        $radius                    = $request->radius;
+        $posts                     = $this->post->where('postType', '=', $request->postType)
+            ->whereBetween('latitude', [$latitude - 0.018 * $radius, $latitude + 0.018 * $radius])
+            /*->whereBetween('longitude', [$longitude - 0.018 * $radius, $longitude + 0.018 * $radius])*/->get();
+        $this->response['post']    = $this->getPostDetails($posts);
+        $this->response['code']    = "0000";
+        $this->response['message'] = "Posts fetched successfully";
+
+        return Response::json($this->response);
+    }
+
+    public function getPostDetails($posts)
+    {
+        $completePost = [];
+        foreach ($posts as $post) {
+            $filenameList = $this->image->where('postId', $post->id)->pluck('filename');
+            $images       = [];
+            foreach ($filenameList as $filename) {
+                array_push($images, route('file.get', $filename));
+            }
+            $post['images'] = $images;
+            array_push($completePost, $post);
+        }
+
+        return ($completePost);
     }
 
     public function fetchDataFromRequest(Request $request)
     {
-        $userId = $this->getLoggedInUserId($request->apiToken);
+        $userId = $this->getLoggedInUserId($request->header(Authorization));
+        dd($request->header('Authorization'));
 
         return ([
             'userId'        => $userId[0],
             'location'      => $request->location,
+            'latitude'      => $request->latitude,
+            'longitude'     => $request->longitude,
             'numberOfRooms' => $request->numberOfRooms,
             'type'          => $request->type,
             'description'   => $request->description,
             'price'         => $request->price,
             'postType'      => $request->postType,
         ]);
-    }
-
-    public function fetchImages($postId)
-    {
-        $images  = [];
-        $imageId = DB::table('postImages')->where('postId', $postId)->pluck('imageId');
-        foreach ($imageId as $id) {
-            $image  = $this->fileEntry->where('id', $id)->get();
-            $images = route('file.get', $image->filename);
-        }
-
-        return $images;
     }
 
     public function getLoggedInUserId($apiToken)

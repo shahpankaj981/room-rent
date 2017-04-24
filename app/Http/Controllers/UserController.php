@@ -50,13 +50,13 @@ class UserController extends Controller
      */
     public function login(Request $request)
     {
-        $validateInitialToken = $this->validateInitialToken($request->apiToken);
-        if (!$validateInitialToken) {
-            $this->response['code']    = "0052";
-            $this->response['message'] = "Invalid Token";
-
-            return Response::json($this->response);
-        }
+//        $validateInitialToken = $this->validateInitialToken($request->apiToken);
+//        if (!$validateInitialToken) {
+//            $this->response['code']    = "0052";
+//            $this->response['message'] = "Invalid Token";
+//
+//            return Response::json($this->response);
+//        }
         $identity     = $request->identity;
         $password     = $request->password;
         $deviceType   = $request->deviceType;
@@ -100,14 +100,11 @@ class UserController extends Controller
                                              'deviceToken' => $deviceToken,
                     ]);
                 }
-//                    $profileImage = $user->image;
-//                    return Response::json($profileImage);
-//                    return response(json_encode($profileImage));
-//                    if ($user->profileImageId) {
-//                        $image                          = $this->fileEntry->find($user->profileImageId);
-                if($user->image){
-                    $this->response['profileImage'] = route('file.get', $user->image->filename);
-                }
+                $user->profileImage = $this->image->where('userId', $user->id)->pluck('filename')->first();
+//                if($user->image){
+//
+//                    $this->response['profileImage'] = route('file.get', $user->image->filename);
+//                }
 
 //                    }
                     $this->response['code']     = '0011';
@@ -136,14 +133,14 @@ class UserController extends Controller
 
     public function store(UsersRequest $request)
     {
-        $this->response       = [];
-        $validateInitialToken = $this->validateInitialToken($request->apiToken);
-        if (!$validateInitialToken) {
-            $this->response['code']    = "0052";
-            $this->response['message'] = "Invalid Token";
-
-            return Response::json($this->response);
-        }
+//        $this->response       = [];
+//        $validateInitialToken = $this->validateInitialToken($request->apiToken);
+//        if (!$validateInitialToken) {
+//            $this->response['code']    = "0052";
+//            $this->response['message'] = "Invalid Token";
+//
+//            return Response::json($this->response);
+//        }
         $data['email']               = $request->email;
         $data['userName']            = $request->userName;
         $data['name']                = $request->name;
@@ -169,30 +166,31 @@ class UserController extends Controller
         $user = $this->user->create($data);
 
         if($request->hasFile('profileImage')){
+//            return response('hy');
             $files = $request->file('profileImage');
             $user = $this->fileManager->saveFile($user, $files, "user");
         }
         $this->response['user']    = $user;
 
-        return Response::json($this->response);
-        if ($request->hasFile('profileImage') &&
-            $request->file('profileImage')->isValid()
-        ) {
-            $file      = $request->file('profileImage');
-            $extension = $file->getClientOriginalExtension();
-            $filename  = str_random(20).$file->getFilename().'.'.$extension;
-
-            try {
-                Storage::disk('local')->put($filename, File::get($file));
-            } catch (Exception $e) {
-                return null;
-            }
-            $image = new Image;
-            $image->mime              = $file->getClientMimeType();
-            $image->original_filename = $file->getClientOriginalName();
-            $image->filename          = $filename;
-            $user->image()->save($image);
-        }
+//        return Response::json($this->response);
+//        if ($request->hasFile('profileImage') &&
+//            $request->file('profileImage')->isValid()
+//        ) {
+//            $file      = $request->file('profileImage');
+//            $extension = $file->getClientOriginalExtension();
+//            $filename  = str_random(20).$file->getFilename().'.'.$extension;
+//
+//            try {
+//                Storage::disk('local')->put($filename, File::get($file));
+//            } catch (Exception $e) {
+//                return null;
+//            }
+//            $image = new Image;
+//            $image->mime              = $file->getClientMimeType();
+//            $image->original_filename = $file->getClientOriginalName();
+//            $image->filename          = $filename;
+//            $user->image()->save($image);
+//        }
         if ($user) {
             \Mail::to($user)->send(new ActivationEmail($user));
             $this->response['code']    = "0013";
@@ -253,7 +251,7 @@ class UserController extends Controller
     public function logout(Request $request)
     {
         try {
-            $this->apiToken->where('userApiToken', $request->userApiToken)->delete();
+            $this->apiToken->where('apiToken', $request->apiToken)->delete();
         } catch (exception $e) {
             $this->response['code']    = "0021";
             $this->response['message'] = "Problem occurred during logout";

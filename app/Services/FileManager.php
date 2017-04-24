@@ -38,7 +38,6 @@ class FileManager
      */
     public function saveFile($object, $files, $model)
     {
-//        dd($files);
         if ($model = "user") {
             $this->object = new User;
             $this->object = $object;
@@ -46,7 +45,6 @@ class FileManager
             $this->object = new Post();
             $this->object = $object;
         }
-//        dd($this->object);
         foreach ($files as $file) {
             $extension = $file->getClientOriginalExtension();
             $filename  = str_random(20).$file->getFilename().'.'.$extension;;
@@ -55,24 +53,11 @@ class FileManager
             } catch (Exception $e) {
                 return null;
             }
-//            $fileData = [
-//                'mime'              => $file->getClientMimeType(),
-//                'original_filename' => $file->getClientOriginalName(),
-//                'filename'          => $filename,
-//            ];
             $image                    = new Image();
-            $image->mime              = $file->getClientMimeType(); //
-            $image->original_filename = $file->getClientOriginalName(); //
-            $image->filename          = $filename; //
-            $this->object->image()->save($image);//
-//            dd($this->image);
-//            try {
-////                $entry = $this->image->create($fileData);
-//                $this->object->image()->save($this->image);//
-//            } catch (Exception $e) {
-//                return $e->getMessage();
-//            }
-
+            $image->mime              = $file->getClientMimeType();
+            $image->original_filename = $file->getClientOriginalName();
+            $image->filename          = $filename;
+            $this->object->image()->save($image);
         }
 
         return $this->object;

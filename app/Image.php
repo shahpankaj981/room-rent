@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class Image extends Model
 {
-    protected $table    = 'images';
     protected $fillable = [
         'filename',
         'mime',
@@ -18,9 +17,10 @@ class Image extends Model
         'updated_at',
         'deleted_at',
     ];
-//
-//    public function posts()
+
+//    public function user()
 //    {
-//        return $this->belongsTo
+//        return $this->belongsTo('App\User');
 //    }
+
 }

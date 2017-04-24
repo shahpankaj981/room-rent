@@ -17,13 +17,13 @@ class CreateImagesTable extends Migration
             $table->increments('id');
             $table->string('filename');
             $table->string('mime');
-            $table->integer('userId')->unsigned();
-            $table->integer('postId')->unsigned();
+            $table->integer('userId')->unsigned()->nullable();
+            $table->integer('postId')->unsigned()->nullable();
             $table->string('original_filename');
             $table->timestamps();
             $table->softDeletes();
-            $table->foreign('userId')->references('userId')->on('users');
-            $table->foreign('postId')->references('postId')->on('posts');
+            $table->foreign('userId')->references('id')->on('users');
+            $table->foreign('postId')->references('id')->on('posts');
         });
     }
     /**

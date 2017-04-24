@@ -4,7 +4,7 @@ namespace App;
 
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use App\FileEntry;
+use App\Image;
 
 class User extends Authenticatable
 {
@@ -30,6 +30,6 @@ class User extends Authenticatable
 
     public function image()
     {
-        return $this->hasOne('App/Image', 'userId', 'userId');
+        return $this->hasOne('App\Image', 'userId');
     }
 }

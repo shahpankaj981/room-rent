@@ -14,7 +14,7 @@ class CreatePostsTable extends Migration
     public function up()
     {
         Schema::create('posts', function (Blueprint $table) {
-            $table->increments('postId');
+            $table->increments('id');
             $table->integer('userId')->unsigned();
             $table->string('location');
             $table->float('latitude');
@@ -24,7 +24,7 @@ class CreatePostsTable extends Migration
             $table->integer('price');
             $table->boolean('postType');
             $table->timestamps();
-            $table->foreign('userId')->references('userId')->on('users');
+            $table->foreign('userId')->references('id')->on('users');
     });
     }
 

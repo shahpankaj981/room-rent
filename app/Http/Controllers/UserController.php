@@ -40,6 +40,7 @@ class UserController extends Controller
         $this->user        = $user;
         $this->apiToken    = $apiToken;
         $this->image   = $image;
+        $this->response = [];
     }
 
     /**
@@ -49,7 +50,6 @@ class UserController extends Controller
      */
     public function login(Request $request)
     {
-        $this->response       = [];
         $validateInitialToken = $this->validateInitialToken($request->apiToken);
         if (!$validateInitialToken) {
             $this->response['code']    = "0052";
@@ -83,33 +83,38 @@ class UserController extends Controller
             } else {
                 $apiToken      = str_random(30);
                 $existingLogin = ApiToken::where([
-                    ['userId', '=', $user->userId],
+                    ['userId', '=', $user->id],
                     ['deviceType', '=', $deviceType],
                     ['deviceToken', '=', $deviceToken],
                 ])->first();
                 if ($existingLogin) {
                     $this->apiToken->where([
-                        ['userId', '=', $user->userId],
+                        ['userId', '=', $user->id],
                         ['deviceToken', '=', $deviceToken],
                         ['deviceType', '=', $deviceType],
                     ])->update(['apiToken' => $apiToken]);
                 } else {
-                    $this->apiToken->insert(['userId'      => $user->userId,
-                                      'deviceType'  => $deviceType,
-                                      'apiToken'    => $apiToken,
-                                      'deviceToken' => $deviceToken,
+                    $this->apiToken->insert(['userId'      => $user->id,
+                                             'deviceType'  => $deviceType,
+                                             'apiToken'    => $apiToken,
+                                             'deviceToken' => $deviceToken,
                     ]);
                 }
-                if ($user->profileImageId) {
-                    $image                          = $this->fileEntry->find($user->profileImageId);
-                    $this->response['profileImage'] = route('file.get', $image->filename);
-                }
-                $this->response['code']     = '0011';
-                $this->response['message']  = 'Successful login';
-                $this->response['apiToken'] = $apiToken;
-                $this->response['user']     = $user;
+//                    $profileImage = $user->image;
+//                    return Response::json($profileImage);
+//                    return response(json_encode($profileImage));
+//                    if ($user->profileImageId) {
+//                        $image                          = $this->fileEntry->find($user->profileImageId);
+                    $this->response['profileImage'] = route('file.get', $user->image->filename);
+//                    }
+                    $this->response['code']     = '0011';
+                    $this->response['message']  = 'Successful login';
+                    $this->response['apiToken'] = $apiToken;
+                    $this->response['user']     = $user;
 
-                return Response::json($this->response);
+                    return Response::json($this->response);
+
+
             }
         }
     }
@@ -158,7 +163,15 @@ class UserController extends Controller
 
             return Response::json($this->response);
         }
-//        $data['profileImageId'] = $this->saveProfileImage($request);
+        $user = $this->user->create($data);
+
+        if($request->hasFile('profileImage')){
+            $files = $request->file('profileImage');
+            $user = $this->fileManager->saveFile($user, $files, "user");
+        }
+        $this->response['user']    = $user;
+
+        return Response::json($this->response);
         if ($request->hasFile('profileImage') &&
             $request->file('profileImage')->isValid()
         ) {
@@ -171,14 +184,12 @@ class UserController extends Controller
             } catch (Exception $e) {
                 return null;
             }
-            $image = new Image();
+            $image = new Image;
             $image->mime              = $file->getClientMimeType();
             $image->original_filename = $file->getClientOriginalName();
-            $image->imageType = 1;
             $image->filename          = $filename;
-            $user = $this->user->create($data);
             $user->image()->save($image);
-            }
+        }
         if ($user) {
             \Mail::to($user)->send(new ActivationEmail($user));
             $this->response['code']    = "0013";

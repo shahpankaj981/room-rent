@@ -19,7 +19,7 @@ class CreateApiTokensTable extends Migration
             $table->string('apiToken');
             $table->string('deviceToken');
             $table->integer('deviceType');
-            $table->foreign('userId')->references('userId')->on('users');
+            $table->foreign('userId')->references('id')->on('users');
             $table->timestamps();
         });
     }

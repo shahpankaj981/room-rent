@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\FileEntry;
+use App\Image;
 use Illuminate\Support\Facades\Storage;
 use App\Services\FileManager;
 use Illuminate\Http\Request;

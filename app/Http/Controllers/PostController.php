@@ -27,26 +27,26 @@ class PostController extends Controller
         $this->user        = $user;
         $this->post        = $post;
         $this->apiToken    = $apiToken;
-        $this->image = $image;
+        $this->image       = $image;
     }
 
     public function savePost(Request $request)
     {
-        $this->response = [];
-        $data           = $this->fetchDataFromRequest($request);
-        $post           = $this->post->create($data);
+        $data = $this->fetchDataFromRequest($request);
+        $post = $this->post->create($data);
         if ($request->hasFile('images')) {
+
             $files = $request->file('images');
-            $entry = [];
-            $i     = 0;
-            foreach ($files as $file) {
-                $entry[$i] = $this->fileManager->saveFile($file);
-                DB::table('postImages')->insert(['imageId' => $entry[$i]->id, 'postId' => $post->id]);
-                $i++;
-            }
+
+//            $entry = [];
+//            $i     = 0;
+//            foreach ($files as $file) {
+            $post = $this->fileManager->saveFile($post, $files, "post");
+//                DB::table('postImages')->insert(['imageId' => $entry[$i]->id, 'postId' => $post->id]);
+//                $i++;
+//            }
         }
         $this->response['post']       = $post;
-        $this->response['postImages'] = [$entry];
         //$this->response['postImages'] = getImages($entry); //function to fetch the images from database
         if ($post) {
             $this->response['code']    = "1000";
@@ -63,9 +63,18 @@ class PostController extends Controller
 
     public function fetchAllPost()
     {
-        $this->post = Post::All();
+        $posts = Post::All();
+        $this->response['post'] = [];
+//        dd($posts->image);
+        foreach ($posts as $post){
+            $this->response['post'] = $post;
+            $this->response['post']['images'] = [];
+            foreach($post->image as $image){
+                $this->response['post']['images'] = route('file.get', $image->filename);
+            }
+        }
 
-        return Response::json($this->post);
+        return Response::json($this->response);
     }
 
     public function fetchPersonalPost($apiToken)
@@ -115,12 +124,13 @@ class PostController extends Controller
 
     public function fetchImages($postId)
     {
-        $images = [];
+        $images  = [];
         $imageId = DB::table('postImages')->where('postId', $postId)->pluck('imageId');
         foreach ($imageId as $id) {
-            $image = $this->fileEntry->where('id', $id)->get();
+            $image  = $this->fileEntry->where('id', $id)->get();
             $images = route('file.get', $image->filename);
         }
+
         return $images;
     }
 

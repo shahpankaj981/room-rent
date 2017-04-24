@@ -14,12 +14,16 @@ use App\Mail\ForgotPasswordEmail;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Response;
 
+/**
+ * Class UserController
+ * @package App\Http\Controllers
+ */
 class UserController extends Controller
 {
 
-    public    $ACTIVE   = 1;
-    public    $INACTIVE = 0;
-    protected $response;
+    const     ACTIVE    = 1;
+    const     INACTIVE  = 0;
+    protected $response = [];
     protected $fileManager;
     protected $user;
     protected $apiToken;
@@ -39,7 +43,6 @@ class UserController extends Controller
         $this->user        = $user;
         $this->apiToken    = $apiToken;
         $this->image       = $image;
-        $this->response    = [];
     }
 
     /**
@@ -127,34 +130,9 @@ class UserController extends Controller
                      'deviceToken' => $request->deviceToken];
         $this->apiToken->updateOrCreate($data, ['apiToken' => $apiToken]);
 
-        /*$existingLogin = $this->apiToken->where([
-            ['userId', '=', $user->id],
-            ['deviceType', '=', $request->deviceType],
-            ['deviceToken', '=', $request->deviceToken],
-        ])->first();
-        if ($existingLogin) {
-            $this->apiToken->where([
-                ['userId', '=', $user->id],
-                ['deviceToken', '=', $request->deviceToken],
-                ['deviceType', '=', $request->deviceType],
-            ])->update(['apiToken' => $apiToken]);
-        } else {
-            $this->apiToken->insert(['userId'      => $user->id,
-                                     'deviceType'  => $request->deviceType,
-                                     'apiToken'    => $apiToken,
-                                     'deviceToken' => $request->deviceToken,
-            ]);
-        }*/
-
         return $apiToken;
     }
 
-
-    /**
-     * checks if the intitial token is correct or not
-     * @param $token
-     * @return bool
-     */
     public function validateInitialToken($token)
     {
         $apiToken = "Bearer OD44GCYFpHYHcwYFTG1QsQBGPOLcHjk8OMOMPkd3Ew3RTaLX0ox2ES3UASxE";
@@ -188,7 +166,7 @@ class UserController extends Controller
             return Response::json($this->response);
         }
         $data                        = $this->fetchUserData($request);
-        $data['activation']          = $this->INACTIVE;
+        $data['activation']          = self::INACTIVE;
         $data['confirmationCode']    = str_random(30);
         $data['forgotPasswordToken'] = "";
 
@@ -208,29 +186,7 @@ class UserController extends Controller
         }
         $user = $this->user->create($data);
         $user = $this->saveProfileImage($request, $user);
-
-
         $this->response['user'] = $user;
-
-//        return Response::json($this->response);
-//        if ($request->hasFile('profileImage') &&
-//            $request->file('profileImage')->isValid()
-//        ) {
-//            $file      = $request->file('profileImage');
-//            $extension = $file->getClientOriginalExtension();
-//            $filename  = str_random(20).$file->getFilename().'.'.$extension;
-//
-//            try {
-//                Storage::disk('local')->put($filename, File::get($file));
-//            } catch (Exception $e) {
-//                return null;
-//            }
-//            $image = new Image;
-//            $image->mime              = $file->getClientMimeType();
-//            $image->original_filename = $file->getClientOriginalName();
-//            $image->filename          = $filename;
-//            $user->image()->save($image);
-//        }
         if ($user) {
             \Mail::to($user)->send(new ActivationEmail($user));
             $this->response['code']    = "0013";
@@ -316,7 +272,7 @@ class UserController extends Controller
         }
         if ($user->confirmationCode == $token) {
             $this->user->where('email', $user->email)
-                ->update(['activation'       => $this->ACTIVE,
+                ->update(['activation'       => self::ACTIVE,
                           'confirmationCode' => "NULL"]);
             $this->response['code']    = "0013";
             $this->response['message'] = "User succesfully registered";

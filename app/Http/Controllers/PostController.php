@@ -8,6 +8,7 @@ use App\Post;
 use App\Services\FileManager;
 use App\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Response;
 
 
@@ -152,8 +153,7 @@ class PostController extends Controller
      */
     public function fetchDataFromRequest(Request $request)
     {
-        $userId = $this->getLoggedInUserId($request->header(Authorization));
-        dd($request->header('Authorization'));
+        $userId = $this->getLoggedInUserId($request->header('Authorization'));
 
         return ([
             'userId'        => $userId[0],

@@ -33,7 +33,12 @@ class FileManager
 
     /**
      * saves file/s in the database
-     * @param $file
+     * @param $object
+     * is the object type which is to be created which is to be associated with image
+     * @param $files
+     * is the list of files that are passed
+     * @param $model
+     * can be user or post
      * @return null|string
      */
     public function saveFile($object, $files, $model)

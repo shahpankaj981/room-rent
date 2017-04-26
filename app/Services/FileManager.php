@@ -32,7 +32,7 @@ class FileManager
     }
 
     /**
-     * saves file in the database
+     * saves file/s in the database
      * @param $file
      * @return null|string
      */

@@ -8,7 +8,6 @@ use App\Post;
 use App\Services\FileManager;
 use App\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Response;
 
 
@@ -30,6 +29,11 @@ class PostController extends Controller
         $this->image       = $image;
     }
 
+    /**
+     * saves the new post and associate it  to the particular user
+     * @param Request $request
+     * @return mixed
+     */
     public function savePost(Request $request)
     {
         $data = $this->fetchDataFromRequest($request);
@@ -52,6 +56,10 @@ class PostController extends Controller
         }
     }
 
+    /**
+     * returns all the posts
+     * @return mixed
+     */
     public function fetchAllPost()
     {
         $posts                  = Post::All();
@@ -60,6 +68,11 @@ class PostController extends Controller
         return Response::json($this->response);
     }
 
+    /**
+     * returns only the logged-in user's posts
+     * @param $apiToken
+     * @return mixed
+     */
     public function fetchPersonalPost($apiToken)
     {
         $userId = $this->getLoggedInUserId($apiToken);
@@ -76,6 +89,11 @@ class PostController extends Controller
         return Response::json($this->response);
     }
 
+    /**
+     * returns only the particular type of posts, i.e either ask-posts or offer-posts
+     * @param $postType
+     * @return mixed
+     */
     public function fetchPost($postType)
     {
         $posts                     = $this->post->where('postType', $postType)->get();
@@ -86,6 +104,11 @@ class PostController extends Controller
         return Response::json($this->response);
     }
 
+    /**
+     * returns the posts of a particular location
+     * @param Request $request
+     * @return mixed
+     */
     public function fetchPostOfParticularArea(Request $request)
     {
         $latitude                  = $request->latitude;
@@ -93,7 +116,7 @@ class PostController extends Controller
         $radius                    = $request->radius;
         $posts                     = $this->post->where('postType', '=', $request->postType)
             ->whereBetween('latitude', [$latitude - 0.018 * $radius, $latitude + 0.018 * $radius])
-            /*->whereBetween('longitude', [$longitude - 0.018 * $radius, $longitude + 0.018 * $radius])*/->get();
+            ->whereBetween('longitude', [$longitude - 0.018 * $radius, $longitude + 0.018 * $radius])->get();
         $this->response['post']    = $this->getPostDetails($posts);
         $this->response['code']    = "0000";
         $this->response['message'] = "Posts fetched successfully";
@@ -101,6 +124,11 @@ class PostController extends Controller
         return Response::json($this->response);
     }
 
+    /**
+     * get the details of jparticular type of posts
+     * @param $posts
+     * @return array
+     */
     public function getPostDetails($posts)
     {
         $completePost = [];
@@ -117,6 +145,11 @@ class PostController extends Controller
         return ($completePost);
     }
 
+    /**
+     * returns the data from the request
+     * @param Request $request
+     * @return array
+     */
     public function fetchDataFromRequest(Request $request)
     {
         $userId = $this->getLoggedInUserId($request->header(Authorization));
@@ -135,9 +168,16 @@ class PostController extends Controller
         ]);
     }
 
-    public function getLoggedInUserId($apiToken)
+    /**
+     * returns the logged in user
+     * @param $header
+     * @return mixed
+     */
+    public function getLoggedInUserId($header)
     {
-        $userId = $this->apiToken->where('apiToken', $apiToken)->pluck('userId');
+        $string   = expode(" ", $header);
+        $apiToken = $string[1];
+        $userId   = $this->apiToken->where('apiToken', $apiToken)->pluck('userId');
 
         return $userId;
     }

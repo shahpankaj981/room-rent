@@ -19,7 +19,7 @@ use Illuminate\Http\Request;
 
 Route::post('user/create','UserController@store');
 
-Route::get('/registration/{token}','UserController@register');
+Route::get('/registration/{token}','UserController@activation');
 
 Route::get('/show/{userId}','UserController@show');
 
@@ -33,7 +33,7 @@ Route::post('/logout','UserController@logout');
 
 Route::post('/login','UserController@login');
 
-Route::put('/update','UserController@update');
+Route::put('user/update','UserController@update');
 
 Route::put('/changePassword','UserController@changePassword');
 

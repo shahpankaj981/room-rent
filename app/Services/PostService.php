@@ -43,7 +43,12 @@ class PostService
     {
         $data = $this->fetchDataFromRequest($request);
         $post = $this->post->create($data);
-        if ($post) {
+        if (!$post) {
+            $this->response['code']    = "1001";
+            $this->response['message'] = "Problem adding a Post";
+
+            return ($this->response);
+        } else {
             if ($request->hasFile('images')) {
                 $files = $request->file('images');
                 $post  = $this->fileManager->saveFile($post, $files, "post");
@@ -51,11 +56,6 @@ class PostService
             $this->response['code']    = "1000";
             $this->response['message'] = "Post added successfully";
             $this->response['post']    = $post;
-
-            return ($this->response);
-        } else {
-            $this->response['code']    = "1001";
-            $this->response['message'] = "Problem adding a Post";
 
             return ($this->response);
         }
@@ -90,6 +90,7 @@ class PostService
             $this->response['code']    = '0001';
             $this->response['message'] = 'No posts to display';
         }
+
         return ($this->response);
     }
 
@@ -157,18 +158,18 @@ class PostService
     public function fetchDataFromRequest(Request $request)
     {
         $userId = $this->getLoggedInUserId($request->header('Authorization'));
+        $data   = ['userId'        => $userId[0],
+                   'location'      => $request->location,
+                   'latitude'      => $request->latitude,
+                   'longitude'     => $request->longitude,
+                   'numberOfRooms' => $request->numberOfRooms,
+                   'type'          => $request->type,
+                   'description'   => $request->description,
+                   'price'         => $request->price,
+                   'postType'      => $request->postType,
+        ];
 
-        return ([
-            'userId'        => $userId[0],
-            'location'      => $request->location,
-            'latitude'      => $request->latitude,
-            'longitude'     => $request->longitude,
-            'numberOfRooms' => $request->numberOfRooms,
-            'type'          => $request->type,
-            'description'   => $request->description,
-            'price'         => $request->price,
-            'postType'      => $request->postType,
-        ]);
+        return ($data);
     }
 
     /**

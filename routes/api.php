@@ -21,7 +21,7 @@ Route::post('user/create','UserController@store');
 
 Route::get('/registration/{token}','UserController@activation');
 
-Route::get('/show/{userId}','UserController@show');
+Route::get('user/show/{userId}','UserController@show');
 
 Route::post('/forgotPassword','UserController@forgotPassword');
 

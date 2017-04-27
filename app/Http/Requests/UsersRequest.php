@@ -26,13 +26,15 @@ class UsersRequest extends FormRequest
     public function rules()
     {
         $rules = [
-            'email'    => 'required | email',
-            'userName' => 'required | max:25',
-            'name'     => 'required | max:25',
+            'email'        => 'required | email | max:35 | unique:users,email',
+            'userName'     => 'required | min:4 | max:25| unique:users,username',
+            'name'         => 'required | max:25',
+            //'profileImage' => 'mimes:jpeg,bmp,png,jpg',
+            'phone'        => 'required'
         ];
 
         if (request()->method() === "POST") {
-            $rules['password'] = 'required|min:8';
+            $rules['password'] = 'required | min:8';
         }
 
         return $rules;
@@ -45,6 +47,12 @@ class UsersRequest extends FormRequest
      */
     public function response(array $errors)
     {
-        return response($errors);
+
+//        return response(request());
+        return response([
+            "errors"  => $errors,
+            "code"    => "0014",
+            "message" => "Validation errors",
+        ]);
     }
 }

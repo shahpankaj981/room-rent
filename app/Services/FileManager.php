@@ -15,7 +15,6 @@ use App\User;
  */
 class FileManager
 {
-
     protected $image;
     protected $storage;
     protected $object;

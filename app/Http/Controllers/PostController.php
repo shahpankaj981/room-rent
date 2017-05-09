@@ -26,9 +26,9 @@ class PostController extends Controller
      * @param Request $request
      * @return mixed
      */
-    public function savePost(Request $request)
+    public function savePost(Request $request, $userId)
     {
-        $this->response = $this->postService->savePost($request);
+        $this->response = $this->postService->savePost($request, $userId);
         return Response::json($this->response);
 
     }

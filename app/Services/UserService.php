@@ -3,9 +3,11 @@
 namespace App\Services;
 
 use App\Image;
+use App\Transformers\UserTransformer;
 use Illuminate\Http\Request;
 use App\User;
 use App\ApiToken;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use App\Mail\ActivationEmail;
 use App\Mail\ForgotPasswordEmail;
@@ -17,17 +19,21 @@ class UserService
     const     INACTIVE = 0;
     protected $response = [];
     protected $fileManager;
+    protected $postService;
     protected $user;
     protected $apiToken;
     protected $image;
+    public    $userTransformer;
 
     public function __construct(User $user, FileManager $fileManager, ApiToken $apiToken,
-                                Image $image)
+                                PostService $postService, Image $image, UserTransformer $userTransformer)
     {
-        $this->fileManager = $fileManager;
-        $this->user        = $user;
-        $this->apiToken    = $apiToken;
-        $this->image       = $image;
+        $this->fileManager     = $fileManager;
+        $this->postService     = $postService;
+        $this->user            = $user;
+        $this->apiToken        = $apiToken;
+        $this->image           = $image;
+        $this->userTransformer = $userTransformer;
     }
 
     /**
@@ -54,7 +60,6 @@ class UserService
 
             return ($this->response);
         }
-
         if (!$this->passwordMatch($identityType, $identity, $password)) {
             $this->response['code']    = "0004";
             $this->response['message'] = "Invalid password";
@@ -73,7 +78,7 @@ class UserService
         $this->response['code']     = '0011';
         $this->response['message']  = 'Successful login';
         $this->response['apiToken'] = $apiToken;
-        $this->response['user']     = $user;
+        $this->response['user']     = $this->userTransformer->transform($user);
 
         return ($this->response);
     }
@@ -126,6 +131,8 @@ class UserService
     {
         $apiToken = "Bearer OD44GCYFpHYHcwYFTG1QsQBGPOLcHjk8OMOMPkd3Ew3RTaLX0ox2ES3UASxE";
 
+        return true;
+
         return ($apiToken == $token) ? true : false;
     }
 
@@ -173,14 +180,18 @@ class UserService
 
             return ($this->response);
         }
-        $user                   = $this->user->create($data);
-        $user                   = $this->saveProfileImage($request, $user);
-        $this->response['user'] = $user;
+        $user = $this->user->create($data);
+        if ($request->hasFile('profileImage')) {
+            $user = $this->saveProfileImage($request, $user);
+        } else {
+            dd('nahhh');
+        }
+        $this->response['user'] = $this->userTransformer->transform($user);
         if ($user) {
             \Mail::to($user)->send(new ActivationEmail($user));
             $this->response['code']    = "0013";
             $this->response['message'] = "User registered";
-            $this->response['user']    = $user;
+            $this->response['user']    = $this->userTransformer->transform($user);
 
             return ($this->response);
         } else {
@@ -236,10 +247,8 @@ class UserService
      */
     public function saveProfileImage($request, $user)
     {
-        if ($request->hasFile('profileImage')) {
-            $files = $request->file('profileImage');
-            $user  = $this->fileManager->saveFile($user, $files, "user");
-        }
+        $files = $request->file('profileImage');
+        $user  = $this->fileManager->saveFile($user, $files, "user");
 
         return $user;
     }
@@ -248,7 +257,7 @@ class UserService
      * activates the user when s/he clicks the activqation link in his/her email
      * @return array
      */
-    public function activation()
+    public function activation($token)
     {
         $user = $this->user->where('confirmationCode', $token)->first();
         if (!$user) {
@@ -299,18 +308,18 @@ class UserService
      * @param Request $request
      * @return array
      */
-    public function update(Request $request)
+    public function update(Request $request, $userId) //
     {
-        $userData                  = $this->getLoggedUser($request->header('Authorization'));
+        //$userData                  = $this->getLoggedUser($request->header('Authorization'));
+        $userData                  = $this->user->where('id', $userId)->first();
         $this->response            = [];
-        $user                      = $this->user->where('userId', '=', $userData->userId)
-            ->update(['email'    => $request->email,
-                      'name'     => $request->name,
+        $user                      = $this->user->where('id', $userData->id)
+            ->update(['name'     => $request->name,
                       'userName' => $request->userName,
                       'phone'    => $request->phone,
             ]);
         $this->response['code']    = "0026";
-        $this->response['message'] = "profile updated successfully";
+        $this->response['message'] = "Profile updated successfully";
         $this->response['user']    = $user;
 
         return ($this->response);
@@ -346,10 +355,11 @@ class UserService
      * @param Request $request
      * @return array
      */
-    public function changePassword(Request $request)
+    public function changePassword($request)
     {
         $userData = $this->getLoggedUser($request->header('Authorization'));
-        $user     = $this->user->where('userId', $userData->userId)->first();
+        $user     = $this->user->findorFail($userData->id);
+
         if (!Hash::check($request->oldPassword, $user->password)) {
             $this->response['code']    = "0021";
             $this->response['message'] = "Old password doesn\'t match";
@@ -362,11 +372,11 @@ class UserService
 
             return ($this->response);
         }
-        $this->user->where('userId', $userData->userId)
+        $this->user->where('id', $userData->id)
             ->update(['password' => bcrypt($request->newPassword)]);
         $this->response['code']    = "0024";
         $this->response['message'] = "The password has been changed";
-        $this->response['user']    = $user;
+        $this->response['user']    = $this->userTransformer->transform($user);
 
         return ($this->response);
     }
@@ -390,6 +400,7 @@ class UserService
         $forgotPasswordToken = str_random(30);
         $user                = $this->user->Where($identityType, $identity)
             ->update(['forgotPasswordToken' => $forgotPasswordToken]);
+        $user                = $this->user->Where($identityType, $identity)->first();
         \Mail::to($user)->send(new ForgotPasswordEmail($user));
         $this->response['code']    = "0023";
         $this->response['message'] = "Password reset link has been sent to your email";
@@ -430,13 +441,35 @@ class UserService
      */
     public function updateProfileImage(Request $request)
     {
-        $this->response            = [];
-        $user                      = $this->getLoggedUser($request->header('Authorization'));
+        $this->response = [];
+        //$user                      = $this->getLoggedUser($request->header('Authorization'));
+        $user                      = $this->user->where('id', $request->userId)->first(); //
         $updatedUser               = $this->saveProfileImage($request, $user);
         $this->response['code']    = '0026';
         $this->response['message'] = 'Profile updated successfully';
-        $this->response['user']    = $updatedUser;
+        $this->response['user']    = $this->userTransformer->transform($updatedUser);
 
         return ($this->response);
+    }
+
+    public function profile($userId)
+    {
+        $user = User::find($userId);
+        if ($user) {
+            $user->profileImage        = Image::where('userId', $user->id)
+                ->orderBy('id', 'desc')
+                ->pluck('filename')
+                ->first();
+            $personalPosts             = $this->postService->fetchPersonalPost($user->id);
+            $this->response['code']    = '0070';
+            $this->response['message'] = "profile data fetched successfully";
+            $this->response['user']    = $user;
+            $this->response['posts']   = $personalPosts;
+        } else {
+            $this->response['code']    = '0071';
+            $this->response['message'] = "ERROR!! Profile Not Found";
+        }
+
+        return $this->response;
     }
 }

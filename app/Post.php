@@ -15,7 +15,7 @@ class Post extends Model
      * @var array
      */
     protected $fillable = [
-        'userId', 'location', 'latitude', 'longitude', 'numberOfRooms','description','price','postType',
+        'userId','title', 'location', 'latitude', 'longitude', 'numberOfRooms','description','price','postType',
     ];
 
     /**
@@ -35,5 +35,20 @@ class Post extends Model
     public function user()
     {
         return $this->belongsTo('App\User');
+    }
+
+    public function getTitleAttribute($value)
+    {
+        return ucfirst($value);
+    }
+
+    public function getLocationAttribute($value)
+    {
+        return ucfirst($value);
+    }
+
+    public function getDescriptionAttribute($value)
+    {
+        return ucfirst($value);
     }
 }

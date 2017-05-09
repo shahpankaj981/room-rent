@@ -16,6 +16,7 @@ class CreatePostsTable extends Migration
         Schema::create('posts', function (Blueprint $table) {
             $table->increments('id');
             $table->integer('userId')->unsigned();
+            $table->string('title');
             $table->string('location');
             $table->decimal('latitude', 10, 4);
             $table->decimal('longitude', 10, 4);

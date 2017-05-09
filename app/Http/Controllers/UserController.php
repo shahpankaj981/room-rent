@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\UsersRequest;
 use App\Services\UserService;
+use App\User;
 use Illuminate\Http\Request;
 use Response;
 
@@ -18,7 +20,7 @@ class UserController extends Controller
 
     /**
      * UserController constructor.
-     * @param UserService $userService
+     * @param UserService  $userService
      */
     public function __construct(UserService $userService)
     {
@@ -40,11 +42,13 @@ class UserController extends Controller
 
     /**
      * stores the userData in the database
-     * @param Request $request
+     * @param UsersRequest|Request $request
      * @return Response
+     * @internal param UsersRequest $usersRequest
      */
-    public function store(Request $request)
+    public function store(UsersRequest $request)
     {
+//        return response(json_encode($request->apiToken));
         $this->response = $this->userService->store($request);
 
         return Response::json(($this->response));
@@ -83,7 +87,8 @@ class UserController extends Controller
      */
     public function show($userId)
     {
-        $user = $this->user->where('userId', $userId)->first();
+        $user = User::findOrFail($userId);
+
         echo json_encode($user);
     }
 
@@ -139,7 +144,7 @@ class UserController extends Controller
 
             return Response::json($this->response);
         } else {
-            return view('forgotPasswordForm')->with('user', $user);
+            return view('forgotPasswordRecoveryForm')->with('user', $user);
         }
     }
 
@@ -160,10 +165,11 @@ class UserController extends Controller
      * @param Request $request
      * @return Response
      */
-    public function updateProfileImage(Request $request)
+    public function updateProfileImage(Request $request, $userId)
     {
-        $this->response = $this->userService->updateProfileImage($request);
+        $this->response = $this->userService->updateProfileImage($request, $userId);
 
-        return Response::json($this->response);
+        //return Response::json($this->response);
+        return redirect()->route('room.profile'); //
     }
 }

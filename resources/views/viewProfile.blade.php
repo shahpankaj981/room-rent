@@ -35,6 +35,8 @@
     </div>
     @if(Auth::id() == $user->id)
       <a href="{{ route('room.updateProfileInfo',['userId'=> $user->id]) }}">Edit Profile Info</a>
+      <br>
+      <a href="{{route('room.changePasswordForm', ['userId' =>$user->id]) }}">Change Password</a>
     @endif
   </div>
   <hr>

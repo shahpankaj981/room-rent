@@ -56,6 +56,12 @@ Route::get('recoverPasswordInitiate', ['as' => 'forgotPasswordInitiate', functio
 
 Route::post('forgotPasswordCheckStatus', 'UserController@forgotPassword')->name('forgotPasswordCheckStatus');
 
+Route::get('room/changePasswordForm', ['as'=>'room.changePasswordForm', function(){
+    return View::make('changePasswordForm');
+}]);
+
+Route::post('room/changePassword', 'RoomController@changePassword')->name('room.changePassword');
+
 Route::get('user/{userId}/post/{postId}/destroy', ['as' => 'room.post.destroy', function ($userId, $postId) {
     if ($userId != Auth::id()) {
         return view('unauthorizedAccess');

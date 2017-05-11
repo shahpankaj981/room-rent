@@ -131,7 +131,7 @@ class UserService
     {
         $apiToken = "Bearer OD44GCYFpHYHcwYFTG1QsQBGPOLcHjk8OMOMPkd3Ew3RTaLX0ox2ES3UASxE";
 
-        return true;
+        return true;//
 
         return ($apiToken == $token) ? true : false;
     }
@@ -174,7 +174,7 @@ class UserService
             return ($this->response);
         }
 
-        if ($this->UserNameTaken($data['userName'])) {
+        if ($this->usernameTaken($data['username'])) {
             $this->response['code']    = "0018";
             $this->response['message'] = "This user name is already taken";
 
@@ -183,8 +183,6 @@ class UserService
         $user = $this->user->create($data);
         if ($request->hasFile('profileImage')) {
             $user = $this->saveProfileImage($request, $user);
-        } else {
-            dd('nahhh');
         }
         $this->response['user'] = $this->userTransformer->transform($user);
         if ($user) {
@@ -210,7 +208,7 @@ class UserService
     public function fetchUserData($request)
     {
         $data['email']    = $request->email;
-        $data['userName'] = $request->userName;
+        $data['userName'] = $request->username;
         $data['name']     = $request->name;
         $data['password'] = bcrypt($request->password);
         $data['phone']    = $request->phone;
@@ -231,12 +229,12 @@ class UserService
 
     /**
      * checks if the userName is already taken
-     * @param $userName
+     * @param $username
      * @return bool
      */
-    public function userNameTaken($userName)
+    public function usernameTaken($username)
     {
-        return ($this->user->where('userName', $userName)->count() ? true : false);
+        return ($this->user->where('username', $username)->count() ? true : false);
     }
 
     /**
@@ -315,7 +313,7 @@ class UserService
         $this->response            = [];
         $user                      = $this->user->where('id', $userData->id)
             ->update(['name'     => $request->name,
-                      'userName' => $request->userName,
+                      'userName' => $request->username,
                       'phone'    => $request->phone,
             ]);
         $this->response['code']    = "0026";
@@ -357,12 +355,13 @@ class UserService
      */
     public function changePassword($request)
     {
-        $userData = $this->getLoggedUser($request->header('Authorization'));
-        $user     = $this->user->findorFail($userData->id);
+//        $userData = $this->getLoggedUser($request->header('Authorization'));
+//        $user     = $this->user->findorFail($userData->id);
+        $user =Auth::user();
 
         if (!Hash::check($request->oldPassword, $user->password)) {
             $this->response['code']    = "0021";
-            $this->response['message'] = "Old password doesn\'t match";
+            $this->response['message'] = "Old password doesn't match";
 
             return ($this->response);
         }
@@ -372,7 +371,7 @@ class UserService
 
             return ($this->response);
         }
-        $this->user->where('id', $userData->id)
+        $this->user->where('id', $user->id)
             ->update(['password' => bcrypt($request->newPassword)]);
         $this->response['code']    = "0024";
         $this->response['message'] = "The password has been changed";

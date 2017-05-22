@@ -6,6 +6,10 @@
     img {
       border: 2px solid #1F1F1F;
     }
+    #messageBtn{
+      border: 2px solid Blue;
+      color: #267eff;
+    }
   </style>
 
 
@@ -37,11 +41,16 @@
       <a href="{{ route('room.updateProfileInfo',['userId'=> $user->id]) }}">Edit Profile Info</a>
       <br>
       <a href="{{route('room.changePasswordForm', ['userId' =>$user->id]) }}">Change Password</a>
+      @else
+          <a href={{route('message.retrieveMessages',['senderId'=>Auth::id(), 'recipientId'=> $user->id])}}>
+            <button id="messageBtn">Send Message</button>
+          </a>
+
     @endif
   </div>
   <hr>
   <br>
-  <h3><b>Your Posts:</b></h3>
+  <h3><b>{{$user->name}}'s Posts:</b></h3>
   <hr>
   <div class="container">
     @foreach($posts as $post)
@@ -57,9 +66,9 @@
           </h4>
       </span>
       @if($post['postType' == 1])
-        <h4>You Asked for:</h4>
+        <h4>{{$user->name}} Asked for:</h4>
       @else
-        <h4> You Offered:</h4>
+        <h4> {{$user->name}} Offered:</h4>
       @endif
       <h4>
         <a href="{{route('room.show', ['id'=> $post['id']])}}">

@@ -24,29 +24,31 @@ Auth::routes();
 
 Route::get('/home', 'HomeController@index')->name('home');
 
+Route::post('people', 'RoomController@findPeople')->name('findPeople');
+
 Route::get('room/showallposts/{postType}', 'RoomController@showAllPosts')->name('room.showallposts');
 
-Route::get('profile/image/update/{userId}', ['as' => 'room.updateProfileImage', function ($userId) {
-    if ($userId != Auth::id()) {
-        return view('unauthorizedAccess');
-    }
+Route::group(['middleware'=>'checkProfileForUpdate'], function(){
+    Route::get('profile/image/update/{userId}', ['as' => 'room.updateProfileImage', function ($userId) {
+        return View::make('profileImageUpdateForm')
+            ->with('userId', $userId);
+    }]);
 
-    return View::make('profileImageUpdateForm')
-        ->with('userId', $userId);
-}]);
+    Route::post('profile/image/update/{userId}', 'RoomController@updateProfileImage');
 
-Route::post('profile/image/update/{userId}', 'RoomController@updateProfileImage');
+    Route::get('profile/info/update/{userId}', ['as' => 'room.updateProfileInfo', function ($userId) {
+        return View::make('profileInfoUpdateForm')
+            ->with('user', User::find($userId));
+    }]);
 
-Route::get('profile/info/update/{userId}', ['as' => 'room.updateProfileInfo', function ($userId) {
-    if ($userId != Auth::id()) {
-        return view('unauthorizedAccess');
-    }
+    Route::post('profile/info/update/{userId}', 'RoomController@updateProfileInfo');
 
-    return View::make('profileInfoUpdateForm')
-        ->with('user', User::find($userId));
-}]);
-
-Route::post('profile/info/update/{userId}', 'RoomController@updateProfileInfo');
+    Route::get('user/{userId}/post/{postId}/destroy', ['as' => 'room.post.destroy', function ($userId, $postId) {
+        app()
+            ->make('App\Http\Controllers\RoomController')
+            ->callAction('destroyPost', $parameters = ['postId' => $postId]);
+    }]);
+});
 
 Route::get('room/profile/{userId}', 'RoomController@viewProfile')->name('room.profile');
 
@@ -62,15 +64,12 @@ Route::get('room/changePasswordForm', ['as'=>'room.changePasswordForm', function
 
 Route::post('room/changePassword', 'RoomController@changePassword')->name('room.changePassword');
 
-Route::get('user/{userId}/post/{postId}/destroy', ['as' => 'room.post.destroy', function ($userId, $postId) {
-    if ($userId != Auth::id()) {
-        return view('unauthorizedAccess');
-    }
-    app()
-        ->make('App\Http\Controllers\RoomController')
-        ->callAction('destroyPost', $parameters = ['postId' => $postId]);
-}]);
-
 Route::resource('/room', 'RoomController', ['except' => 'index']);
 
+Route::get('/message/retrieve', 'MessageController@retrieveMessages')->name('message.retrieveMessages');
 
+Route::get('messages/threads', 'MessageController@viewThreads')->name('message.viewThreads');
+
+Route::post('/message/send', 'MessageController@sendMessage')->name('message.sendMessage');
+
+Route::get('message/destroy', 'MessageController@destroyMessage')->name('message.destroy');

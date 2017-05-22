@@ -53,6 +53,11 @@
                             <li><a href="{{ route('login') }}">Login</a></li>
                             <li><a href="{{ route('register') }}">Register</a></li>
                         @else
+                            <li style="margin-top: 9px; margin-right:100px;">
+                                {!! Form::open(['route'=>['findPeople','method'=> 'get']]) !!}
+                                <input type="text" placeholder="Search People " name="searchPeople" style="width: 400px; text-align: center;">
+                                {!! Form::close() !!}
+                            </li>
                             <li class="dropdown">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
                                     {{ Auth::user()->name }} <span class="caret"></span>

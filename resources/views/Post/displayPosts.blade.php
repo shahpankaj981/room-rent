@@ -14,13 +14,13 @@
 </style>
 @section('content')
   <div class="col col-md-12">
-    @if($postType = 1)
+    @if($postType == "1")
       <h1>Ask Posts</h1>
     @else
       <h1>Offer Posts</h1>
     @endif
     <div>
-      @foreach($posts as $post)
+      @forelse($posts as $post)
         <span id="userName">
           <h3>
             <a href="{{route('room.profile', ['userId'=> $post['user']['id']])}}"><b>{{$post['user']['name']}}</b></a>
@@ -42,7 +42,9 @@
         </a>
         <br/>
         <hr>
-      @endforeach
+      @empty
+        <p><h2>There are no posts yet!!</h2></p>
+      @endforelse
     </div>
   </div>
 @endsection

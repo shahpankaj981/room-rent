@@ -34,6 +34,10 @@ class User extends Authenticatable
         return $this->hasOne('App\Image', 'userId');
     }
 
+    public function threads()
+    {
+        return $this->hasMany('App\Thread', 'senderId');
+    }
     public function getNameAttribute($value)
     {
         return ucfirst($value);

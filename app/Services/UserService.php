@@ -208,7 +208,7 @@ class UserService
     public function fetchUserData($request)
     {
         $data['email']    = $request->email;
-        $data['userName'] = $request->username;
+        $data['username'] = $request->username;
         $data['name']     = $request->name;
         $data['password'] = bcrypt($request->password);
         $data['phone']    = $request->phone;

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Services\PostService;
 use App\Services\UserService;
+use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Response;
@@ -19,6 +20,7 @@ class RoomController extends Controller
         $this->postService = $postService;
         $this->userService = $userService;
         $this->middleware('auth');
+        $this->middleware('checkProfileForUpdate',['only'=>['updateProfileInfo','updateProfileImage','destroyPost']]);
     }
 
     /**
@@ -76,7 +78,7 @@ class RoomController extends Controller
 
 //        $posts = $this->postService->fetchPost($postType);
         if ($this->response['code'] == '000') {
-            return view('Post.displayPosts')->with('posts', $this->response['post']);
+            return view('Post.displayPosts')->with('posts', $this->response['post'])->with('postType', $postType);
         } else {
             return view('response')->with('response', $this->response['message']);
         }
@@ -106,7 +108,7 @@ class RoomController extends Controller
         $this->response = $this->userService->update($request, $userId);
         if ($this->response['code'] == '0026') {
             return redirect(route('room.profile', ['userId' => $userId]))->with([
-                'flash_mesage' => $this->response['message'],
+                'flash_message' => $this->response['message'],
             ]);
         } else {
             return response('ERROR UPDATING PROFILE');
@@ -155,5 +157,23 @@ class RoomController extends Controller
         $this->response = $this->userService->changePassword($request);
 
         return view('response')->with('response', $this->response);
+    }
+
+    public function findPeople(Request $request)
+    {
+        $data=[];
+        $users = User::where('name', 'like', '%'.$request->searchPeople.'%')
+                        ->orWhere('username','like', '%'.$request->searchPeople.'%')
+                        ->orWhere('email', 'like', '%'.$request->searchPeople.'%')
+            ->get();
+        foreach ($users as $user) {
+            $individualData = [];
+            $user->image;
+            $individualData['id']    = $user['id'];
+            $individualData['name']  = $user['name'];
+            $individualData['image'] = $user->image->filename;
+            array_push($data, $individualData);
+        }
+        return view('listOfPeople')->with('query',$request->searchPeople)->with('data', $data);
     }
 }

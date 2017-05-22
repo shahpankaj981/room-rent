@@ -22,8 +22,8 @@ class CreateImagesTable extends Migration
             $table->string('original_filename');
             $table->timestamps();
             $table->softDeletes();
-            $table->foreign('userId')->references('id')->on('users');
-            $table->foreign('postId')->references('id')->on('posts');
+            $table->foreign('userId')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('postId')->references('id')->on('posts')->onDelete('cascade');
         });
     }
     /**

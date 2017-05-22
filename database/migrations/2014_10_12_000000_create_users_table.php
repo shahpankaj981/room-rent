@@ -20,7 +20,6 @@ class CreateUsersTable extends Migration
             $table->string('name');
             $table->string('password');
             $table->string('phone')->nullable();
-            $table->string('phone')->nullable();
             $table->boolean('activation');
             $table->string('confirmationCode');
             $table->string('forgotPasswordToken');

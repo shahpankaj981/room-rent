@@ -17,37 +17,43 @@ use Illuminate\Http\Request;
 //     return $request->user();
 // });
 
-Route::post('user/create','UserController@store');
+Route::group(['prefix' => '/v1'], function () {
 
-Route::get('/registration/{token}','UserController@activation');
+    Route::post('user/create', 'UserController@store')->name('user.create');
 
-Route::get('user/show/{userId}','UserController@show');
+    Route::get('/registration/{token}', 'UserController@activation');
 
-Route::post('/forgotPassword','UserController@forgotPassword');
+    Route::get('user/show/{userId}', 'UserController@show');
 
-Route::get('/showForgotPasswordForm/{email}/{forgotPasswordToken}','UserController@forgotPasswordForm');
+    Route::post('/forgotpassword', 'UserController@forgotPassword');
 
-Route::post('/savePassword','UserController@forgotPasswordStore');
+    Route::get('/showForgotPasswordForm/{email}/{forgotPasswordToken}', 'UserController@showForgotPasswordForm')->name('recoverPassword');
 
-Route::post('/logout','UserController@logout');
+    Route::post('/savepassword', 'UserController@forgotPasswordStore')->name('recoveredPasswordStore');
 
-Route::post('/login','UserController@login');
+    Route::post('/logout', 'UserController@logout');
 
-Route::put('user/update','UserController@update');
+    Route::post('/login', 'UserController@login')->name('login');
 
-Route::put('/changePassword','UserController@changePassword');
+    Route::put('user/update', 'UserController@update');
 
-Route::get('/delete/{id}','UserController@delete');
+    Route::put('user/update/profileimage/{userId}', 'UserController@updateProfileImage')->name('user.updateProfileImage');
 
-Route::get('/getFile/{filename}', 'ImageController@getFile')
-    ->name('file.get');
+    Route::put('/changepassword', 'UserController@changePassword');
 
-Route::post('post/create', 'PostController@savePost');
+    Route::get('/delete/{id}', 'UserController@delete');
 
-Route::get('/fetchAllPost', 'PostController@fetchAllPost');
+    Route::get('/getFile/{filename}', 'ImageController@getFile')
+        ->name('file.get');
 
-Route::get('/fetchPostOfParticularArea', 'PostController@fetchPostOfParticularArea');
+    Route::post('post/create', 'PostController@savePost');
 
-Route::get('/fetchPersonalPost/{apiToken}', 'PostController@fetchPersonalPost');
+    Route::get('/fetchAllPost', 'PostController@fetchAllPost');
 
-Route::get('/fetchPost/{postType}', 'PostController@fetchPost');
+    Route::get('/fetchPostOfParticularArea', 'PostController@fetchPostOfParticularArea');
+
+    Route::get('/fetchPersonalPost/{apiToken}', 'PostController@fetchPersonalPost');
+
+    Route::get('/fetchPost/{postType}', 'PostController@fetchPost')->name('post.show');
+
+});

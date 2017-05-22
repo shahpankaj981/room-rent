@@ -14,8 +14,8 @@
 
       <!--userName-->
       <div class="form-group">
-        {!! Form::label('userName', 'User Name', ['class' => 'col-md-4 control-label']) !!}
-        {{ Form::text('userName') }}
+        {!! Form::label('username', 'User Name', ['class' => 'col-md-4 control-label']) !!}
+        {{ Form::text('username') }}
       </div>
 
       <!--phone-->

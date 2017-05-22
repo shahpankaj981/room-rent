@@ -33,8 +33,6 @@ class PostController extends Controller
 
     }
 
-
-
     /**
      * returns only the logged-in user's posts
      * @param $apiToken

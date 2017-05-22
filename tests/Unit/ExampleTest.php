@@ -3,10 +3,9 @@
 namespace Tests\Unit;
 
 use Tests\TestCase;
-use Illuminate\Foundation\Testing\DatabaseMigrations;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Laracasts\Integrated\Extensions\Laravel as IntegrationTest;
 
-class ExampleTest extends TestCase
+class ExampleTest extends IntegrationTest
 {
     /**
      * A basic test example.
@@ -15,6 +14,19 @@ class ExampleTest extends TestCase
      */
     public function testBasicTest()
     {
-        $this->assertTrue(true);
+        $this->visit('/')
+            ->see('hello');
+    }
+
+    /**
+     * Creates the application.
+     *
+     * Needs to be implemented by subclasses.
+     *
+     * @return \Symfony\Component\HttpKernel\HttpKernelInterface
+     */
+    public function createApplication()
+    {
+        // TODO: Implement createApplication() method.
     }
 }

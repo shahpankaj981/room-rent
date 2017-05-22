@@ -50,9 +50,9 @@ class PostService
      */
     public function savePost(Request $request, $userId)//
     {
-        $data = $this->fetchDataFromRequest($request);
+        $data           = $this->fetchDataFromRequest($request);
         $data['userId'] = $userId;
-        $post = $this->post->create($data);
+        $post           = $this->post->create($data);
         if (!$post) {
             $this->response['code']    = "1001";
             $this->response['message'] = "Problem adding a Post";
@@ -91,7 +91,7 @@ class PostService
     public function fetchPersonalPost($userId/*$apiToken*/)
     {
         //$userId = $this->getLoggedInUserId($apiToken);
-        $posts  = $this->post->where('userId', $userId)->get();
+        $posts = $this->post->where('userId', $userId)->get();
         if ($posts) {
             $this->response['code']    = "0000";
             $this->response['message'] = "Posts fetched successfully";
@@ -102,11 +102,11 @@ class PostService
         }
 
         //return ($this->response);
-        return($posts); //
+        return ($posts);
     }
 
     /**
-     * service function that returns the particular type of psots
+     * service function that returns the particular type of posts
      * @param $postType
      * @return array
      */
@@ -170,16 +170,16 @@ class PostService
     public function fetchDataFromRequest(Request $request)
     {
         //$userId = $this->getLoggedInUserId($request->header('Authorization'));
-        $data   = [//'userId'        => $userId[0],
-                    'title'        => $request->title,
-                   'location'      => $request->location,
-                   'latitude'      => 90.0,//$request->latitude,
-                   'longitude'     => 76.876,//$request->longitude,
-                   'numberOfRooms' => $request->numberOfRooms,
-                   'type'          => $request->type,
-                   'description'   => $request->description,
-                   'price'         => $request->price,
-                   'postType'      => $request->postType,
+        $data = [//'userId'        => $userId[0],
+            'title'         => $request->title,
+            'location'      => $request->location,
+            'latitude'      => 90.0,//$request->latitude,
+            'longitude'     => 76.876,//$request->longitude,
+            'numberOfRooms' => $request->numberOfRooms,
+            'type'          => $request->type,
+            'description'   => $request->description,
+            'price'         => $request->price,
+            'postType'      => $request->postType,
         ];
 
         return ($data);
@@ -187,8 +187,7 @@ class PostService
 
     public function getPost($id)
     {
-        $completePost= [];
-        $post = $this->post->where('id', $id)->first();
+        $post         = $this->post->where('id', $id)->first();
         $post['user'] = $this->user->where('id', $post->userId)->pluck('name');
         $filenameList = $this->image->where('postId', $post->id)->pluck('filename');
         $images       = [];
@@ -196,8 +195,8 @@ class PostService
             array_push($images, route('file.get', $filename));
         }
         $post['images'] = $images;
-        $post = $this->postTransformer->transform($post);
-//        array_push($completePost, );
+        $post           = $this->postTransformer->transform($post);
+
         return $post;
     }
 
@@ -218,6 +217,7 @@ class PostService
     public function destroy($id)
     {
         $delete = $this->post->where('id', $id)->delete();
+
         return $delete;
     }
 }

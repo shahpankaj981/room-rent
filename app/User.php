@@ -17,7 +17,7 @@ class User extends Authenticatable
      * @var array
      */
     protected $fillable = [
-        'name', 'email', 'password', 'userName', 'phone', 'confirmationCode', 'forgotPasswordToken', 'activation',
+        'name', 'email', 'password', 'username', 'phone', 'confirmationCode', 'forgotPasswordToken', 'activation',
     ];
 
     /**
@@ -34,6 +34,10 @@ class User extends Authenticatable
         return $this->hasOne('App\Image', 'userId');
     }
 
+    public function threads()
+    {
+        return $this->hasMany('App\Thread', 'senderId');
+    }
     public function getNameAttribute($value)
     {
         return ucfirst($value);

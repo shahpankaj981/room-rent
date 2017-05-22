@@ -20,7 +20,7 @@ class UserController extends Controller
 
     /**
      * UserController constructor.
-     * @param UserService  $userService
+     * @param UserService $userService
      */
     public function __construct(UserService $userService)
     {
@@ -64,7 +64,6 @@ class UserController extends Controller
     {
         $this->response = $this->userService->activation($token);
 
-
         return Response::json($this->response);
     }
 
@@ -99,9 +98,9 @@ class UserController extends Controller
      */
     public function update(Request $request)
     {
-        $this->response = $this->userService->update($request);
+        //$this->response = $this->userService->update($request);
 
-        return Response::json($this->response);
+        //return Response::json($this->response);
     }
 
 
@@ -169,7 +168,6 @@ class UserController extends Controller
     {
         $this->response = $this->userService->updateProfileImage($request, $userId);
 
-        //return Response::json($this->response);
-        return redirect()->route('room.profile'); //
+        return Response::json($this->response);
     }
 }

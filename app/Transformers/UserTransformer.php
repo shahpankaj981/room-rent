@@ -8,7 +8,7 @@ class UserTransformer extends Transformer
     {
         return [
             'id'               => $user->id,
-            'userName'         => $user->userName,
+            'username'         => $user->username,
             'email'            => $user->email,
             'name'             => $user->name,
             'phone'            => $user->phone,

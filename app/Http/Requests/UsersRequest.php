@@ -27,7 +27,7 @@ class UsersRequest extends FormRequest
     {
         $rules = [
             'email'        => 'required | email | max:35 | unique:users,email',
-            'userName'     => 'required | min:4 | max:25| unique:users,username',
+            'username'     => 'required | min:4 | max:25| unique:users,username',
             'name'         => 'required | max:25',
             //'profileImage' => 'mimes:jpeg,bmp,png,jpg',
             'phone'        => 'required'

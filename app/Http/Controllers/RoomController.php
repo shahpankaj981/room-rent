@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Image;
 use App\Services\PostService;
 use App\Services\UserService;
 use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Response;
 
 class RoomController extends Controller
 {
@@ -20,10 +20,11 @@ class RoomController extends Controller
         $this->postService = $postService;
         $this->userService = $userService;
         $this->middleware('auth');
+        $this->middleware('checkProfileForUpdate',['only'=>['updateProfileInfo','updateProfileImage','destroyPost']]);
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Show the form for creating a new POst.
      *
      * @return \Illuminate\Http\Response
      */
@@ -33,7 +34,7 @@ class RoomController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Store a newly created Post in database.
      *
      * @param  \Illuminate\Http\Request $request
      * @return \Illuminate\Http\Response
@@ -48,37 +49,43 @@ class RoomController extends Controller
             \Session::flash('flash_message', 'Sorry!! Problem adding post! Please try again');
         }
 
-        return redirect(route('room.profile',['userId'=>$userId]));
-    }
-
-    public function viewProfile($userId)
-    {
-       $this->response = $this->userService->profile($userId);
-       if($this->response['code'] == '0070') {
-           return view('viewProfile')->with('user', $this->response['user'])->with('posts', $this->response['posts']);
-       }
-       else{
-           return response($this->response['message']);
-       }
-    }
-
-    public function showAllPosts($postType)
-    {
-        $posts = $this->postService->fetchPost($postType);
-
-        return view('Post.displayPosts')->with('posts', $posts);
-    }
-
-    public function showPersonalPosts()
-    {
-        $post = $this->postService->fetchPersonalPost();
-
-        return view('Post.personalPostDisplay')->with('post', $post);
+        return redirect(route('room.profile', ['userId' => $userId]));
     }
 
     /**
-     * Display the specified resource.
-     *
+     * Displays the profile info of a user
+     * @param $userId
+     * @return \Illuminate\View\View
+     */
+    public function viewProfile($userId)
+    {
+        $this->response = $this->userService->profile($userId);
+        if ($this->response['code'] == '0070') {
+            return view('viewProfile')->with('user', $this->response['user'])->with('posts', $this->response['posts']);
+        } else {
+            return view('response')->with('response', $this->response);
+        }
+    }
+
+    /**
+     * displays all the posts of a particular type
+     * @param $postType
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     */
+    public function showAllPosts($postType)
+    {
+        $this->response = $this->postService->fetchPost($postType);
+
+//        $posts = $this->postService->fetchPost($postType);
+        if ($this->response['code'] == '000') {
+            return view('Post.displayPosts')->with('posts', $this->response['post'])->with('postType', $postType);
+        } else {
+            return view('response')->with('response', $this->response['message']);
+        }
+    }
+
+    /**
+     * Display the details of a post.
      * @param  int $id
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      * @internal param int $postType
@@ -91,71 +98,82 @@ class RoomController extends Controller
     }
 
     /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int $id
-     * @return \Illuminate\Http\Response
+     * Updates the info of a user
+     * @param Request $request
+     * @param         $userId
+     * @return \Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Http\RedirectResponse|\Symfony\Component\HttpFoundation\Response
      */
-    public function edit($id)
-    {
-        return view('');
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request $request
-     * @param  int                      $id
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, $id)
-    {
-        //
-    }
-
     public function updateProfileInfo(Request $request, $userId)
     {
         $this->response = $this->userService->update($request, $userId);
-        if($this->response['code'] == '0026'){
-            return redirect(route('room.profile',['userId'=> $userId]))->with([
-                'flash_mesage'=>$this->response['message']
+        if ($this->response['code'] == '0026') {
+            return redirect(route('room.profile', ['userId' => $userId]))->with([
+                'flash_message' => $this->response['message'],
             ]);
-        }
-        else{
+        } else {
             return response('ERROR UPDATING PROFILE');
         }
-
     }
 
+    /**
+     * Updates the profile image of a user
+     * @param Request $request
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     */
     public function updateProfileImage(Request $request)
     {
         $response = $this->userService->updateProfileImage($request);
         if ($response['code'] == '0026') {
-            return redirect(route('room.profile'));
+            return redirect(route('room.profile', ['userId' => Auth::id()]));
         } else {
-            return response('Error updating profile image');
+            return view('response')->with($response['message'] = 'Error updating profile image');
         }
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Remove the specified post from database
      *
      * @param $postId
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      * @internal param int $id
      */
     public function destroyPost($postId)
     {
         $delete = $this->postService->destroy($postId);
         if ($delete) {
-            return redirect(route('room.profile',['userId'=>Auth::id()]));
+            return redirect(route('room.profile', ['userId' => Auth::id()]));
         } else {
-            return response('Sorry!!! Could not delete the post');
+            return view('response')->with($response['message'] = 'Sorry!!! Could not delete the post');
         }
     }
 
-    public function forgotPassword(Request $request)
+    /**
+     * Changes the password
+     * @param Request $request
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     */
+    public function changePassword(Request $request)
     {
-        
+        $this->response = $this->userService->changePassword($request);
+
+        return view('response')->with('response', $this->response);
+    }
+
+    public function findPeople(Request $request)
+    {
+        $data=[];
+        $users = User::where('name', 'like', '%'.$request->searchPeople.'%')
+                        ->orWhere('username','like', '%'.$request->searchPeople.'%')
+                        ->orWhere('email', 'like', '%'.$request->searchPeople.'%')
+            ->get();
+        foreach ($users as $user) {
+            $individualData = [];
+            $user->image;
+            $individualData['id']    = $user['id'];
+            $individualData['name']  = $user['name'];
+            $individualData['image'] = $user->image->filename;
+            array_push($data, $individualData);
+        }
+        return view('listOfPeople')->with('query',$request->searchPeople)->with('data', $data);
     }
 }
